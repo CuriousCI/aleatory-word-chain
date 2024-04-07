@@ -109,3 +109,62 @@ Il punteggio massimo è 6/30, articolato come segue:
 
 Il progetto dovrà essere inviato in un solo file `.zip` tramite la pagina:
 https://elearning.uniroma1.it/mod/assign/view.php?id=633768
+
+# Examples
+
+Testo in ingresso
+
+```
+Cosa dicono le previsioni del tempo? Oggi c'era molto caldo!
+```
+
+File CSV in uscita _(l’ordine delle righe non è importante)_
+
+```csv
+.,cosa,1
+cosa,dicono,1
+dicono,le,1
+le,previsioni,1
+previsioni,del,1
+del,tempo,1
+tempo,?,1
+?,oggi,1
+oggi,c',1
+c',era,1
+era,molto,1
+molto,caldo,1
+caldo,!,1
+```
+
+Testo in ingresso
+
+```
+Cosa dicono le previsioni del tempo? Previsioni del tempo di oggi: tempo incerto! Previsioni di domani?
+```
+
+File CSV in uscita _(l’ordine delle righe non è importante)_
+
+```csv
+., cosa,1
+!,previsioni,1
+cosa,dicono,1
+dicono,le,1
+le,previsioni,1
+previsioni,di,0.3333,del,0.6666
+del,tempo,1
+tempo,incerto,0.3333,di,0.3333,?,0.3333
+?,previsioni,1
+di,domani,0.5,oggi,0.5
+oggi,tempo,1
+incerto,!,1
+domani,?,1
+```
+
+Quattro testi casuali di 11 parole prodotti con la tabella di cui sopra (usando ! come parola precedente la prima):
+
+```
+Previsioni del tempo incerto ! Cosa dicono le previsioni del tempo
+Previsioni di oggi tempo incerto ! Previsioni di oggi tempo incerto
+Previsioni del tempo di oggi tempo incerto ! Previsioni di domani
+Cosa dicono le previsioni del tempo incerto ! Previsioni di domani
+```
