@@ -25,8 +25,6 @@ Sono richieste due versioni del programma: una a singolo processo e una multi-pr
 
 > ??? Nello stesso repository? Come separarli?
 
-<!-- Dati in ingresso e requisiti generali: -->
-
 ## Input
 
 ### Compito 1
