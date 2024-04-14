@@ -23,15 +23,11 @@ Generi un testo in maniera casuale usando la frequenza delle parole calcolata ne
 
 Sono richieste due versioni del programma: una a singolo processo e una multi-processo con almeno tre processi concorrenti. Entrambe le versioni dovranno dare all’utente la possibilità di eseguire indipendentemente i compiti 1 e 2
 
-> ??? Nello stesso repository? Come separarli?
-
 ## Input
 
 ### Compito 1
 
 - un file di testo in codifica Unicode (UTF-8) contenente un testo in italiano strutturato in frasi terminate dai caratteri `.`, `?`, o `!` _(altri caratteri di punteggiatura possono essere presenti)_
-
-> ??? Dobbiamo scrivere noi l'algoritmo che legge la codifica utf-8?
 
 ### Compito 2
 
@@ -52,22 +48,15 @@ Sono richieste due versioni del programma: una a singolo processo e una multi-pr
 
 ## Requisiti specifici
 
-- [ ] le punteggiature `.`, `?`, `!` devono essere trattate come parole separate
-- [ ] gli apostrofi fanno parte della parola
-- [ ] la rimanente punteggiatura può essere scartata
-- [ ] maiuscole/minuscole non hanno effetto _(Es. ‘oggi’ = ‘Oggi’ = ’OGGI’ = etc...)_
+- [.] le punteggiature `.`, `?`, `!` devono essere trattate come parole separate
+- [.] gli apostrofi fanno parte della parola
+- [.] la rimanente punteggiatura può essere scartata
+- [.] maiuscole/minuscole non hanno effetto _(Es. ‘oggi’ = ‘Oggi’ = ’OGGI’ = etc...)_
 - [ ] la prima parola del testo si intende preceduta dal carattere punto
-
-> ??? Cosa intende per preceduta dal punto?
-
 - [ ] nel generare il testo casuale si può specificare una prima parola, altrimenti il programma seleziona una punteggiatura a caso tra `.`, `?`, `!` _(secondo la tabella di input)_ e genera la parola successiva
-
-> ??? Ovvero?
-
 - [ ] nel generare il testo casuale la parola all’inizio di una frase _(cioè la parola dopo un punto `.`, `?`, o `!`)_ deve avere l'**iniziale maiuscola**
 - [ ] si assuma che una parola sia lunga al **massimo 30 caratteri** stampabili
-
-> ??? Quindi non include caratteri speciali? Sono incluse anche emoji (ad esempio)?
+- [ ] ultima parola seguita dalla prima
 
 ## Requisiti generali del progetto
 
@@ -92,7 +81,6 @@ Sono richieste due versioni del programma: una a singolo processo e una multi-pr
 - sviluppare prima la versione mono-processo del programma, poi quella multi-processo
 - nel leggere il file `.csv` contenente la tabella della frequenza delle parole controllate che la somma delle frequenze di ogni linea sia 1
 
-> ??? Decimali non affidabili? Non li devo controllare quando li salvo? Cosa fare se non vanno bene?
 
 - per l’analisi della linea di comando si consiglia `getopt`, di uso molto semplice e che fa parte della libreria GNU standard del C
 - concentratevi prima sulla **correttezza** del codice
