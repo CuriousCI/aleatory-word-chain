@@ -21,6 +21,9 @@ typedef struct Link {
 } Link;
 
 /* */
+Vector *graph_from_csv(char *csv);
+
+/* */
 Vector *graph_from_string(char *string);
 
 /* */

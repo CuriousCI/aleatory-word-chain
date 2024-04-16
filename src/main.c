@@ -2,6 +2,7 @@
 #include "vector.h"
 #include "word_graph.h"
 #include <ctype.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -254,6 +255,7 @@ typedef enum { WORD, KEY, VALUE } Csv;
 int main(int argc, char **argv) {
   // TODO: getopt
 
+  setlocale(LC_CTYPE, "it_IT.UTF-8"); // put your locale here
   if (argv[1][0] == '1') {
     int length = 584 * 1024 * 1024;
     char *string = malloc(length * sizeof(char));
@@ -282,7 +284,7 @@ int main(int argc, char **argv) {
     fread(outfile, sizeof(char), len2 - 2, fout);
     outfile[len2 - 1] = 0;
 
-    Vector *graph = graph_from_string(outfile);
+    Vector *graph = graph_from_csv(outfile);
 
     // for (size_t i = 0; i < graph->len; i++) {
     //   Word *word = get(graph, i);
