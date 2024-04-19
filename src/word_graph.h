@@ -2,17 +2,20 @@
 #define WORD_GRAPH_H_
 
 #include "vector.h"
+#include <wchar.h>
 
 // typedef Vector *Table;
 // TODO: parse
 // TODO: structs
-// TODO: rename file to graph?
 
 /* */
 typedef struct Word {
-  char *slice;
+  wchar_t *slice;
   Vector *links;
 } Word;
+
+/* Compares the slices in two words with with wcscmp. */
+int wordcmp(void *w1, void *w2);
 
 /* */
 typedef struct Link {
@@ -21,12 +24,25 @@ typedef struct Link {
 } Link;
 
 /* */
-Vector *graph_from_csv(char *csv);
+// Vector *graph_from_slice(wchar_t *slice);
+
+// TODO: return -1 on error?
+// TODO: generate table
+// TODO: then generate string
+// TODO: then save string
 
 /* */
-Vector *graph_from_string(char *string);
+void print_table(wchar_t *slice);
 
-/* */
-int wordcmp(void *w1, void *w2);
+/* Parses a CSV file and generates a graph of words. */
+Vector *graph_from_csv(wchar_t *csv);
+
+// TODO: generate text
+/* Generates a random text from a random character '.', '?', '!' */
+wchar_t *generate_text(Vector *graph, size_t n);
+
+// TODO: generate text
+/* Generates a random text from a specified word */
+wchar_t *generate_text_from_word(Vector *graph, size_t n, wchar_t *word);
 
 #endif // !TABLE_H_

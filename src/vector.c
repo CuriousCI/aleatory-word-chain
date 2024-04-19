@@ -15,7 +15,7 @@ void push(Vector *vector, void *item) {
   vector->data[vector->len - 1] = item;
 }
 
-void *insert(Vector *vector, void *item, int (*compare)(void *, void *)) {
+void *vec_insert(Vector *vector, void *item, int (*compare)(void *, void *)) {
   for (int i = 0; i < vector->len; i++)
     if (compare(vector->data[i], item) == 0) {
       free(item);

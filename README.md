@@ -1,5 +1,7 @@
 # Chaos Codex
 
+## Manual
+
 <!-- Sistemi Operativi II Modulo -->
 <!---->
 <!-- Progetto -->
@@ -48,15 +50,15 @@ Sono richieste due versioni del programma: una a singolo processo e una multi-pr
 
 ## Requisiti specifici
 
-- [.] le punteggiature `.`, `?`, `!` devono essere trattate come parole separate
-- [.] gli apostrofi fanno parte della parola
-- [.] la rimanente punteggiatura può essere scartata
-- [.] maiuscole/minuscole non hanno effetto _(Es. ‘oggi’ = ‘Oggi’ = ’OGGI’ = etc...)_
-- [ ] la prima parola del testo si intende preceduta dal carattere punto
+- [x] le punteggiature `.`, `?`, `!` devono essere trattate come parole separate
+- [x] gli apostrofi fanno parte della parola
+- [x] la rimanente punteggiatura può essere scartata
+- [x] maiuscole/minuscole non hanno effetto _(Es. ‘oggi’ = ‘Oggi’ = ’OGGI’ = etc...)_
+- [x] la prima parola del testo si intende preceduta dal carattere punto
 - [ ] nel generare il testo casuale si può specificare una prima parola, altrimenti il programma seleziona una punteggiatura a caso tra `.`, `?`, `!` _(secondo la tabella di input)_ e genera la parola successiva
-- [ ] nel generare il testo casuale la parola all’inizio di una frase _(cioè la parola dopo un punto `.`, `?`, o `!`)_ deve avere l'**iniziale maiuscola**
-- [ ] si assuma che una parola sia lunga al **massimo 30 caratteri** stampabili
-- [ ] ultima parola seguita dalla prima
+- [x] nel generare il testo casuale la parola all’inizio di una frase _(cioè la parola dopo un punto `.`, `?`, o `!`)_ deve avere l'**iniziale maiuscola**
+- [x] si assuma che una parola sia lunga al **massimo 30 caratteri** stampabili
+- [x] ultima parola seguita dalla prima
 
 ## Requisiti generali del progetto
 
@@ -76,8 +78,8 @@ Sono richieste due versioni del programma: una a singolo processo e una multi-pr
 
 ## Suggerimenti
 
-- usare nomi di variabili e funzioni corrispondenti al loro significato/utilizzo;
-- usare `stdin` e `stdout` per rispettivamente il testo in ingresso e in uscita
+- [x] usare nomi di variabili e funzioni corrispondenti al loro significato/utilizzo;
+- [x] usare `stdin` e `stdout` per rispettivamente il testo in ingresso e in uscita
 - sviluppare prima la versione mono-processo del programma, poi quella multi-processo
 - nel leggere il file `.csv` contenente la tabella della frequenza delle parole controllate che la somma delle frequenze di ogni linea sia 1
 
