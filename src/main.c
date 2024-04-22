@@ -2,7 +2,6 @@
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
-// #include <time.h>
 #include <unistd.h>
 #include <wchar.h>
 
@@ -28,28 +27,7 @@ int main(int argc, char **argv) {
   if (argv[1][0] == '1')
     print_table(slice);
   else
-    generate_text(graph_from_csv(slice), atoi(argv[2]));
+    generate_text(parse_csv(slice), atoi(argv[2]));
 
   exit(EXIT_SUCCESS);
 }
-
-// Vector *graph = graph_from_csv(slice);
-// srand(time(NULL));
-// TODO: if there is an argument word, start from it
-// srand(time(NULL));
-
-// float start_time = (float)clock() / CLOCKS_PER_SEC;
-// float end_time = (float)clock() / CLOCKS_PER_SEC;
-// printf("%f\n", end_time - start_time);
-
-// setlocale(LC_CTYPE, "it_IT.UTF-8"); // put your locale here
-
-// key:
-//  - left
-//  - right
-// value:
-//  - count
-//
-//  sentence ? . !
-//  word ' '
-// Quello delle parole non è altro che un grafo pesato con la frequenza?

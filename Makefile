@@ -15,11 +15,18 @@ run2:
 	gcc ./src/*.c && cat output | ./a.out 2 100000
 
 run3:
-	gcc ./src/*.c && cat ./tests/test_2 | ./a.out 1 | ./a.out 2 100000
+	gcc ./src/*.c && cat ./tests/test_5 | ./a.out 1 | ./a.out 2 10000
+
+run4:
+	gcc ./src/*.c && cat ./tests/lotr | ./a.out 1 > output
+
+run5:
+	gcc ./src/*.c && cat ./tests/lotr | ./a.out 1 | ./a.out 2 100000 > out
 
 bench:
 	gcc ./src/*.c && ./a.out
 
+# cargo build, cargo run, etc...
 
 test:
 	gcc ./src/*.c && ./a.out > output

@@ -1,5 +1,6 @@
 #include "hashmap.h"
 #include <stdlib.h>
+#include <wchar.h>
 
 // TODO: typedef for cmp and hash functions
 
@@ -13,47 +14,106 @@ HashMap *hash_map(size_t size) {
 
   map->size = size;
   map->buckets = calloc(size, sizeof(Vector *));
-  for (int i = 0; i < size; i++)
-    map->buckets[i] = vec();
+  for (size_t bucket = 0; bucket < size; bucket++)
+    map->buckets[bucket] = vec();
 
   return map;
 }
 
 Vector *at(HashMap *map, size_t index) { return map->buckets[index]; }
 
-void insert(HashMap *map, void *key, void *value, size_t (*hash)(const void *),
-            int (*cmp)(const void *, const void *)) {
-  Vector *bucket = map->buckets[hash(key) % map->size];
+// void insert(HashMap *map, void *key, void *value, size_t (*hash)(const void
+// *),
+//             int (*cmp)(const void *, const void *)) {
+//   Vector *bucket = map->buckets[hash(key) % map->size];
+//
+//   for (int i = 0; i < bucket->len; i++) {
+//     Entry *entry = get(bucket, i);
+//     if (cmp(key, entry->key) == 0) {
+//       entry->value = value;
+//       return;
+//     }
+//   }
+//
+//   Entry *entry = calloc(1, sizeof(Entry));
+//   entry->key = key;
+//   entry->value = value;
+//   push(bucket, entry);
+// }
+
+void *value(const HashMap *map, wchar_t *key, size_t size) {
+  Vector *bucket = map->buckets[wcshash(key) % map->size];
 
   for (int i = 0; i < bucket->len; i++) {
     Entry *entry = get(bucket, i);
-    if (cmp(key, entry->key) == 0) {
-      entry->value = value;
-      return;
-    }
+    if (wcscmp(key, entry->key) == 0)
+      return entry->value;
   }
 
   Entry *entry = calloc(1, sizeof(Entry));
   entry->key = key;
-  entry->value = value;
+  entry->value = calloc(1, size);
   push(bucket, entry);
+
+  return entry->value;
 }
 
-void *find(HashMap *map, void *key, size_t (*hash)(const void *),
-           int (*cmp)(const void *, const void *)) {
-  Vector *bucket = map->buckets[hash(key) % map->size];
+// void *initialize(const HashMap *map, wchar_t *key, void
+// *(initializer)(size_t),
+//                  size_t size) {
+//   Vector *bucket = map->buckets[wcshash(key) % map->size];
+//
+//   for (int i = 0; i < bucket->len; i++) {
+//     Entry *entry = get(bucket, i);
+//     if (wcscmp(key, entry->key) == 0)
+//       return entry->value;
+//   }
+//
+//   Entry *entry = calloc(1, sizeof(Entry));
+//   entry->key = key;
+//   entry->value = initializer(size);
+//   push(bucket, entry);
+//
+//   return entry->value;
+// }
+
+void *entry(const HashMap *map, wchar_t *key) {
+  // void *entry(const HashMap *map, wchar_t *key, size_t size) {
+  Vector *bucket = map->buckets[wcshash(key) % map->size];
 
   for (int i = 0; i < bucket->len; i++) {
     Entry *entry = get(bucket, i);
-    if (cmp(key, entry->key) == 0)
+    if (wcscmp(key, entry->key) == 0)
       return entry;
   }
 
   Entry *entry = calloc(1, sizeof(Entry));
   entry->key = key;
+  // entry->value = calloc(1, size);
   push(bucket, entry);
+
   return entry;
 }
+
+// Entry *entry = get(bucket, i);
+// if (wcscmp(key, entry->key) == 0)
+//   return &entry->value;
+
+// void *find(HashMap *map, void *key, size_t (*hash)(const void *),
+//            int (*cmp)(const void *, const void *)) {
+//   Vector *bucket = map->buckets[hash(key) % map->size];
+//
+//   for (int i = 0; i < bucket->len; i++) {
+//     Entry *entry = get(bucket, i);
+//     if (cmp(key, entry->key) == 0)
+//       return entry;
+//   }
+//
+//   Entry *entry = calloc(1, sizeof(Entry));
+//   entry->key = key;
+//   push(bucket, entry);
+//   return entry;
+// }
 
 // TODO: -1 if error
 // TODO: pass constructor + arguments as needed

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 
 Vector *vec() {
-  Vector *vector = malloc(sizeof(Vector));
-  vector->data = malloc(0);
+  Vector *vector = calloc(1, sizeof(Vector));
+  vector->data = calloc(0, 0);
   vector->len = 0;
   return vector;
 }

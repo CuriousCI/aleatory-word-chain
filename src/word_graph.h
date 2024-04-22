@@ -1,6 +1,7 @@
 #ifndef WORD_GRAPH_H_
 #define WORD_GRAPH_H_
 
+#include "hashmap.h"
 #include "vector.h"
 #include <wchar.h>
 
@@ -18,8 +19,17 @@ typedef struct Word {
 int wordcmp(void *w1, void *w2);
 
 /* */
+HashMap *parse_csv(wchar_t *csv);
+
+// typedef struct Link {
+//   Word *word;
+//   float frequency;
+// } Link;
+//
+// TODO: double instead of float? Maybe long double?
+/* */
 typedef struct Link {
-  Word *word;
+  Entry *entry;
   float frequency;
 } Link;
 
@@ -39,7 +49,8 @@ Vector *graph_from_csv(wchar_t *csv);
 
 // TODO: generate text
 /* Generates a random text from a random character '.', '?', '!' */
-wchar_t *generate_text(Vector *graph, size_t n);
+// wchar_t *generate_text(Vector *graph, size_t n);
+wchar_t *generate_text(HashMap *graph, size_t n);
 
 // TODO: generate text
 /* Generates a random text from a specified word */
