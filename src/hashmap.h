@@ -3,17 +3,18 @@
 
 #include "vector.h"
 #include <stddef.h>
+#include <wchar.h>
 
 /* */
 typedef struct Entry {
-  void *key;
+  wchar_t *key;
   void *value;
 } Entry;
 
 /* */
 typedef struct HashMap {
   Vector **buckets;
-  size_t size;
+  size_t size, items;
 } HashMap;
 
 HashMap *hash_map(size_t size);
@@ -36,10 +37,10 @@ HashMap *hash_map(size_t size);
 Vector *at(HashMap *map, size_t index);
 
 /*  */
-void *value(const HashMap *map, wchar_t *key, size_t size);
+void *value_o(HashMap *map, wchar_t *key, size_t size);
 
 /* */
-void *entry(const HashMap *map, wchar_t *key);
+void *entry(HashMap *map, wchar_t *key);
 
 /* */
 size_t wcshash(const wchar_t *string);

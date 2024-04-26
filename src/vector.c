@@ -3,7 +3,7 @@
 
 Vector *vec() {
   Vector *vector = calloc(1, sizeof(Vector));
-  vector->data = calloc(0, 0);
+  vector->data = calloc(0, sizeof(void *));
   vector->len = 0;
   return vector;
 }
@@ -15,13 +15,20 @@ void push(Vector *vector, void *item) {
   vector->data[vector->len - 1] = item;
 }
 
-void *vec_insert(Vector *vector, void *item, int (*compare)(void *, void *)) {
-  for (int i = 0; i < vector->len; i++)
-    if (compare(vector->data[i], item) == 0) {
-      free(item);
-      return vector->data[i];
-    }
-
-  push(vector, item);
-  return item;
-}
+// Vector *vec() {
+//   Vector *vector = calloc(1, sizeof(Vector));
+//   vector->len = 0;
+//   vector->size = 1;
+//   vector->data = calloc(vector->size, sizeof(void *));
+//   return vector;
+// }
+//
+// void *get(Vector *vector, size_t index) { return vector->data[index]; }
+//
+// void push(Vector *vector, void *item) {
+//   if (++vector->len >= vector->size) {
+//     vector->size = vector->size * 2;
+//     vector->data = realloc(vector->data, vector->size * sizeof(void *));
+//   }
+//   vector->data[vector->len - 1] = item;
+// }

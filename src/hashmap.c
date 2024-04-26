@@ -1,119 +1,70 @@
 #include "hashmap.h"
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 
 // TODO: typedef for cmp and hash functions
 
-// typedef struct HashMap {
-//   Vector **buckets;
-//   size_t size;
-// } HashMap;
-
 HashMap *hash_map(size_t size) {
   HashMap *map = calloc(1, sizeof(HashMap));
 
-  map->size = size;
-  map->buckets = calloc(size, sizeof(Vector *));
-  for (size_t bucket = 0; bucket < size; bucket++)
-    map->buckets[bucket] = vec();
+  map->size = 100;
+  map->items = 0;
+  map->buckets = calloc(map->size, sizeof(Vector *));
 
   return map;
 }
 
 Vector *at(HashMap *map, size_t index) { return map->buckets[index]; }
 
-// void insert(HashMap *map, void *key, void *value, size_t (*hash)(const void
-// *),
-//             int (*cmp)(const void *, const void *)) {
-//   Vector *bucket = map->buckets[hash(key) % map->size];
-//
-//   for (int i = 0; i < bucket->len; i++) {
-//     Entry *entry = get(bucket, i);
-//     if (cmp(key, entry->key) == 0) {
-//       entry->value = value;
-//       return;
-//     }
-//   }
-//
-//   Entry *entry = calloc(1, sizeof(Entry));
-//   entry->key = key;
-//   entry->value = value;
-//   push(bucket, entry);
-// }
+void *value_o(HashMap *map, wchar_t *key, size_t size) {
+  Entry *e = entry(map, key);
+  if (e->value == NULL)
+    e->value = calloc(1, size);
 
-void *value(const HashMap *map, wchar_t *key, size_t size) {
-  Vector *bucket = map->buckets[wcshash(key) % map->size];
-
-  for (int i = 0; i < bucket->len; i++) {
-    Entry *entry = get(bucket, i);
-    if (wcscmp(key, entry->key) == 0)
-      return entry->value;
-  }
-
-  Entry *entry = calloc(1, sizeof(Entry));
-  entry->key = key;
-  entry->value = calloc(1, size);
-  push(bucket, entry);
-
-  return entry->value;
+  return e->value;
 }
 
-// void *initialize(const HashMap *map, wchar_t *key, void
-// *(initializer)(size_t),
-//                  size_t size) {
-//   Vector *bucket = map->buckets[wcshash(key) % map->size];
-//
-//   for (int i = 0; i < bucket->len; i++) {
-//     Entry *entry = get(bucket, i);
-//     if (wcscmp(key, entry->key) == 0)
-//       return entry->value;
-//   }
-//
-//   Entry *entry = calloc(1, sizeof(Entry));
-//   entry->key = key;
-//   entry->value = initializer(size);
-//   push(bucket, entry);
-//
-//   return entry->value;
-// }
+void *entry(HashMap *map, wchar_t *key) {
+  size_t hash = wcshash(key);
+  Vector *bucket = map->buckets[hash % map->size];
 
-void *entry(const HashMap *map, wchar_t *key) {
-  // void *entry(const HashMap *map, wchar_t *key, size_t size) {
-  Vector *bucket = map->buckets[wcshash(key) % map->size];
+  if (bucket == NULL) {
+    map->buckets[hash % map->size] = vec();
+    bucket = map->buckets[hash % map->size];
+  }
 
-  for (int i = 0; i < bucket->len; i++) {
-    Entry *entry = get(bucket, i);
+  for (size_t item = 0; item < bucket->len; item++) {
+    Entry *entry = get(bucket, item);
     if (wcscmp(key, entry->key) == 0)
       return entry;
   }
 
   Entry *entry = calloc(1, sizeof(Entry));
   entry->key = key;
-  // entry->value = calloc(1, size);
   push(bucket, entry);
+
+  if (++map->items >= map->size * 3) {
+    map->buckets = realloc(map->buckets, map->size * 2 * sizeof(Vector *));
+    for (size_t bucket = map->size; bucket < map->size * 2; bucket++)
+      map->buckets[bucket] = NULL;
+    map->size <<= 1;
+  }
 
   return entry;
 }
 
-// Entry *entry = get(bucket, i);
-// if (wcscmp(key, entry->key) == 0)
-//   return &entry->value;
-
-// void *find(HashMap *map, void *key, size_t (*hash)(const void *),
-//            int (*cmp)(const void *, const void *)) {
-//   Vector *bucket = map->buckets[hash(key) % map->size];
-//
-//   for (int i = 0; i < bucket->len; i++) {
-//     Entry *entry = get(bucket, i);
-//     if (cmp(key, entry->key) == 0)
-//       return entry;
-//   }
-//
-//   Entry *entry = calloc(1, sizeof(Entry));
-//   entry->key = key;
-//   push(bucket, entry);
-//   return entry;
-// }
+// bucket = vec();
+// bucket = map->buckets[wcshash(key) % map->size];
+// bucket = vec();
+// size_t old = map->size;
+// map->size *= 2;
+// memset(map->buckets + old, 0, old);
+// memset(map->buckets, 0, map->size);
+// map->buckets = realloc(map->buckets, map->size * 2 * sizeof(Vector *));
+// for (size_t bucket = map->size; bucket < map->size * 2; bucket++)
+//   map->buckets[bucket] = vec();
 
 // TODO: -1 if error
 // TODO: pass constructor + arguments as needed
@@ -126,14 +77,13 @@ static const size_t POWERS[] = {
     966470838, 960595717, 778466966, 132475730, 106747594, 309175387,
 };
 
-// https://cp-algorithms.com/string/string-hashing.html
+/* https://cp-algorithms.com/string/string-hashing.html */
 size_t wcshash(const wchar_t *string) {
   const size_t modulo = 1e9 + 9;
   size_t hash = 0, power = 0;
 
   while (*string) {
-    hash =
-        (hash + (*string - 'a' + 1) * POWERS[power < 30 ? power : 29]) % modulo;
+    hash = (hash + (*string - 'a' + 1) * POWERS[power % 30]) % modulo;
     power++;
     string++;
   }
@@ -141,41 +91,6 @@ size_t wcshash(const wchar_t *string) {
   return hash;
 }
 
-// void dict_insert(HashMap *dictionary, void *item, size_t hash) {
-//   Vector *bucket = dictionary->buckets[hash % dictionary->size];
-//
-//   int found = 0;
-//
-//   for (int i = 0; i < bucket->len; i++) {
-//     Entry *e = get(bucket, i);
-//     if (e->key == hash) {
-//       e->value = item;
-//       found = 1;
-//       break;
-//     }
-//   }
-//
-//   if (!found) {
-//     Entry *e = calloc(1, sizeof(Entry));
-//     e->key = hash;
-//     e->value = item;
-//     push(bucket, e);
-//   }
-//   // insert(bucket, hash);
-//   // return find(bucket, hash);
-// }
-
-/* */
-// void *dict_get(HashMap *dictionary, size_t hash) {}
-
-// long long compute_hash(string const& s) {
-//     const int p = 31;
-//     const int m = 1e9 + 9;
-//     long long hash_value = 0;
-//     long long p_pow = 1;
-//     for (char c : s) {
-//         hash_value = (hash_value + (c - 'a' + 1) * p_pow) % m;
-//         p_pow = (p_pow * p) % m;
-//     }
-//     return hash_value;
-// }
+// hash =
+//     (hash + (*string - 'a' + 1) * POWERS[power < 30 ? power : 29]) %
+//     modulo;

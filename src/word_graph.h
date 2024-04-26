@@ -5,7 +5,6 @@
 #include "vector.h"
 #include <wchar.h>
 
-// typedef Vector *Table;
 // TODO: parse
 // TODO: structs
 
@@ -21,11 +20,6 @@ int wordcmp(void *w1, void *w2);
 /* */
 HashMap *parse_csv(wchar_t *csv);
 
-// typedef struct Link {
-//   Word *word;
-//   float frequency;
-// } Link;
-//
 // TODO: double instead of float? Maybe long double?
 /* */
 typedef struct Link {
@@ -40,6 +34,7 @@ typedef struct Link {
 // TODO: generate table
 // TODO: then generate string
 // TODO: then save string
+// TODO: lettere accentate italiane se possibile / utf-8 letters?
 
 /* */
 void print_table(wchar_t *slice);

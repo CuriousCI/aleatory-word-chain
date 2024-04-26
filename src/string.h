@@ -5,7 +5,7 @@
 
 /* */
 typedef struct String {
-  wchar_t *slice;
+  wchar_t *str;
   size_t len;
 } String;
 
@@ -14,9 +14,6 @@ String *str();
 
 /* Allocate a slice containing a single wchar_t. */
 wchar_t *slice_from_wchar_t(wchar_t c);
-
-/* Allocate a String if size wcslen(slice) containing a slice in O(n). */
-// String *string_from_slice(wchar_t *slice);
 
 /* Allocate a String containing a single wchar_t. */
 String *string_from_wchar_t(wchar_t c);

@@ -14,7 +14,14 @@
 typedef struct Vector {
   void **data;
   size_t len;
+  size_t size;
 } Vector;
+
+// typedef struct Vector {
+//   void **data;
+//   size_t len;
+//   size_t size;
+// } Vector;
 
 /* Allocate an empty Vector on the heap. */
 Vector *vec();
@@ -25,9 +32,5 @@ void *get(Vector *vector, size_t index);
 
 /* Pushes an item at the end of the Vector. */
 void push(Vector *vector, void *item);
-
-/* Searches if items exists in vector. If it does, it returns the pointer to the
- * existing item, otherwise it pushes the new item at the end of the Vector.  */
-void *vec_insert(Vector *vector, void *item, int (*compare)(void *, void *));
 
 #endif // !VECTOR_H_

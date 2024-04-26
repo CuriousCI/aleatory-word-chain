@@ -7,7 +7,7 @@
 /* */
 String *str() {
   String *string = malloc(sizeof(String));
-  string->slice = calloc(1, sizeof(wchar_t));
+  string->str = calloc(1, sizeof(wchar_t));
   string->len = 1;
 
   return string;
@@ -23,26 +23,15 @@ wchar_t *slice_from_wchar_t(wchar_t c) {
 String *string_from_wchar_t(wchar_t c) {
   String *string = malloc(sizeof(String));
 
-  string->slice = calloc(2, sizeof(wchar_t));
-  *(string->slice) = c;
+  string->str = calloc(2, sizeof(wchar_t));
+  *(string->str) = c;
   string->len = 2;
 
   return string;
 }
 
-String *string_from_slice(wchar_t *slice) {
-  String *string = malloc(sizeof(String));
-
-  size_t len = wcslen(slice);
-  string->slice = calloc(len, sizeof(wchar_t));
-  string->len = len;
-  wcscpy(string->slice, slice);
-
-  return string;
-}
-
 void append(String *string, wchar_t c) {
-  string->slice = realloc(string->slice, ++string->len * sizeof(wchar_t));
-  string->slice[string->len - 2] = c;
-  string->slice[string->len - 1] = 0;
+  string->str = realloc(string->str, ++string->len * sizeof(wchar_t));
+  string->str[string->len - 2] = c;
+  string->str[string->len - 1] = 0;
 }

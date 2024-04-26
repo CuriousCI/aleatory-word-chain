@@ -1,3 +1,4 @@
+#include "rbtree.h"
 #include "word_graph.h"
 #include <locale.h>
 #include <stdio.h>
