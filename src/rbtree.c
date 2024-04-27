@@ -1,9 +1,16 @@
 #include "rbtree.h"
+#include "hashmap.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
 
 typedef enum { Left, Right, None } Direction;
+
+// typedef struct Cache {
+//   Node *nodes;
+//   size_t size;
+// } Cache;
 
 static Node *FAKE_LEAF = &(Node){NULL, NULL, Black, NULL, NULL, NULL};
 
@@ -12,6 +19,8 @@ RBTree *tree() {
 
   tree->root = FAKE_LEAF;
   tree->nodes = vec();
+  tree->cache_size = 50;
+  tree->cache = calloc(tree->cache_size, sizeof(Node *));
 
   return tree;
 }
@@ -122,11 +131,19 @@ static Node *find_insert(RBTree *tree, Node *node, Node *parent, wchar_t *key,
 }
 
 Node *node(RBTree *tree, wchar_t *key) {
+  size_t hash = wcshash(key);
+  Node *c = tree->cache[hash % tree->cache_size];
+  if (c != NULL && wcscmp(c->key, key) == 0) {
+    return c;
+  }
+
   Node *node = find_insert(tree, tree->root, NULL, key, None);
 
   if (tree->root->parent != NULL) {
     tree->root = tree->root->parent;
   }
+
+  tree->cache[hash % tree->cache_size] = node;
 
   return node;
 }

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
 
@@ -85,11 +86,6 @@ typedef struct Record {
   RBTree *map;
 } Record;
 
-// typedef struct Record {
-//   size_t count;
-//   HashMap *map;
-// } Record;
-
 RBTree *table(Vector *words) {
   RBTree *map = tree();
 
@@ -109,25 +105,6 @@ RBTree *table(Vector *words) {
   return map;
 }
 
-// HashMap *table(Vector *words) {
-//   HashMap *map = hash_map(words->len / 100);
-//
-//   for (int i = 0; i < words->len - 1; i++) {
-//     wchar_t *word = get(words, i);
-//     wchar_t *next_word = get(words, i + 1);
-//
-//     Record *record = value(map, word, sizeof(Record));
-//     if (record->map == NULL)
-//       record->map = hash_map(100);
-//     record->count++;
-//
-//     size_t *count = value(record->map, next_word, sizeof(size_t));
-//     *count += 1;
-//   }
-//
-//   return map;
-// }
-
 void print_table(wchar_t *str) {
   RBTree *map = table(parse_words(str));
 
@@ -144,67 +121,7 @@ void print_table(wchar_t *str) {
     }
     printf("\n");
   }
-
-  // for (int i = 0; i < map->size; i++) {
-  //   Vector *bucket = at(map, i);
-  //
-  //   for (int j = 0; bucket != NULL && j < bucket->len; j++) {
-  //     Entry *entry = get(bucket, j);
-  //     Record *record = entry->value;
-  //     size_t count = record->count;
-  //     printf("%ls", (wchar_t *)entry->key);
-  //
-  //     HashMap *links = record->map;
-  //
-  //     for (int k = 0; links != NULL && k < links->size; k++) {
-  //       Vector *links_buckets = at(links, k);
-  //
-  //       for (int n = 0; links_buckets != NULL && n < links_buckets->len; n++)
-  //       {
-  //         Entry *e = get(links_buckets, n);
-  //         size_t *link_count = e->value;
-  //
-  //         printf(",%ls,%g", (wchar_t *)e->key,
-  //                (float)*link_count / (float)count);
-  //       }
-  //     }
-  //
-  //     printf("\n");
-  //   }
-  // }
 }
-
-// void print_table(wchar_t *str) {
-//   HashMap *map = table(parse_words(str));
-//
-//   for (int i = 0; i < map->size; i++) {
-//     Vector *bucket = at(map, i);
-//
-//     for (int j = 0; bucket != NULL && j < bucket->len; j++) {
-//       Entry *entry = get(bucket, j);
-//       Record *record = entry->value;
-//       size_t count = record->count;
-//       printf("%ls", (wchar_t *)entry->key);
-//
-//       HashMap *links = record->map;
-//
-//       for (int k = 0; links != NULL && k < links->size; k++) {
-//         Vector *links_buckets = at(links, k);
-//
-//         for (int n = 0; links_buckets != NULL && n < links_buckets->len; n++)
-//         {
-//           Entry *e = get(links_buckets, n);
-//           size_t *link_count = e->value;
-//
-//           printf(",%ls,%g", (wchar_t *)e->key,
-//                  (float)*link_count / (float)count);
-//         }
-//       }
-//
-//       printf("\n");
-//     }
-//   }
-// }
 
 // - [ ] nel generare il testo casuale si può specificare una prima parola,
 // altrimenti il programma seleziona una punteggiatura a caso tra `.`, `?`,

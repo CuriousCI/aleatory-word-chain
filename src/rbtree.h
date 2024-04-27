@@ -18,6 +18,8 @@ typedef struct Node {
 typedef struct RBTree {
   Node *root;
   Vector *nodes;
+  Node **cache;
+  size_t cache_size;
 } RBTree;
 
 RBTree *tree();

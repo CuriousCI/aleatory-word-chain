@@ -14,8 +14,13 @@ SRC_DIR := src
 tree:
 	gcc ./src/*.c 
 
+exec:
+	gcc ./src/*.c
+
 lotr:
-	cat ./tests/lotr | ./a.out 1 > output
+	cat lotr | ./a.out 1 > output
+# lotr:
+# 	cat ./tests/lotr | ./a.out 1 > output
 
 run1:
 	gcc ./src/*.c && cat ./tests/test_5 | ./a.out 1 > output
