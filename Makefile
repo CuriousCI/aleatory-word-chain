@@ -22,6 +22,18 @@ lotr:
 # lotr:
 # 	cat ./tests/lotr | ./a.out 1 > output
 
+divcomm:
+	cat ./tests/test_5 | ./a.out 1 > output
+
+build:
+	gcc ./src/*.c
+
+test_2:
+	cat ./tests/test_2 | ./a.out 1 > output
+
+# test_2:
+# 	gcc ./src/*.c && cat ./tests/test_2 | ./a.out 1 > output
+
 run1:
 	gcc ./src/*.c && cat ./tests/test_5 | ./a.out 1 > output
 

@@ -18,8 +18,6 @@ typedef struct Node {
 typedef struct RBTree {
   Node *root;
   Vector *nodes;
-  Node **cache;
-  size_t cache_size;
 } RBTree;
 
 RBTree *tree();
@@ -31,6 +29,17 @@ Node *node(RBTree *tree, wchar_t *key);
 void visit(RBTree *tree);
 
 #endif
+
+// Node **cache;
+// size_t cache_size;
+//
+// tree->cache_size = 10;
+// tree->cache = calloc(tree->cache_size, sizeof(Node *));
+// size_t hash = wcshash(key);
+// Node *c = tree->cache[hash % tree->cache_size];
+// if (c != NULL && wcscmp(c->key, key) == 0)
+//   return c;
+// tree->cache[hash % tree->cache_size] = node;
 
 // typedef struct {
 // wchar_t *key;

@@ -1,5 +1,4 @@
 #include "rbtree.h"
-#include "hashmap.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,144 +6,135 @@
 
 typedef enum { Left, Right, None } Direction;
 
-// typedef struct Cache {
-//   Node *nodes;
-//   size_t size;
-// } Cache;
-
-static Node *FAKE_LEAF = &(Node){NULL, NULL, Black, NULL, NULL, NULL};
+Node *FAKE_LEAF = &(Node){NULL, NULL, Black, NULL, NULL, NULL};
 
 RBTree *tree() {
   RBTree *tree = calloc(1, sizeof(RBTree));
 
-  tree->root = FAKE_LEAF;
-  tree->nodes = vec();
-  tree->cache_size = 50;
-  tree->cache = calloc(tree->cache_size, sizeof(Node *));
+  *tree = (RBTree){FAKE_LEAF, vec()};
 
   return tree;
 }
 
-static void rotate_sx(Node *node) {
-  Node *parent = node->parent, *y = node->dx;
-  Node *alpha = node->sx, *beta = y->sx, *gamma = node->dx;
+static void rotate_sx(RBTree *tree, Node *node) {
+  Node *parent = node->parent;
+  Node *right_child = node->dx;
 
-  if (parent != NULL) {
-    if (parent->sx == node)
-      parent->sx = y;
-    else
-      parent->dx = y;
-  }
-  y->parent = parent;
+  node->dx = right_child->sx;
+  if (right_child->sx != NULL)
+    right_child->sx->parent = node;
 
-  y->sx = node;
-  node->parent = y;
-  node->sx = alpha;
-  node->dx = beta;
-  alpha->parent = node;
-  beta->parent = node;
+  right_child->sx = node;
+  node->parent = right_child;
+
+  if (parent == NULL)
+    tree->root = right_child;
+  else if (parent->sx == node)
+    parent->sx = right_child;
+  else if (parent->dx == node)
+    parent->dx = right_child;
+
+  if (right_child != NULL)
+    right_child->parent = parent;
 }
 
-static void rotate_dx(Node *node) {
-  Node *parent = node->parent, *y = node->sx;
-  Node *alpha = y->sx, *beta = y->dx, *gamma = node->dx;
+static void rotate_dx(RBTree *tree, Node *node) {
+  Node *parent = node->parent;
+  Node *left_child = node->sx;
 
-  if (parent != NULL) {
-    if (parent->sx == node)
-      parent->sx = y;
-    else
-      parent->dx = y;
-  }
-  y->parent = parent;
+  node->sx = left_child->dx;
+  if (left_child->dx != NULL)
+    left_child->dx->parent = node;
 
-  y->sx = alpha;
-  y->dx = node;
-  alpha->parent = y;
-  node->parent = y;
-  node->sx = beta;
-  node->sx->parent = y;
+  left_child->dx = node;
+  node->parent = left_child;
+
+  if (parent == NULL)
+    tree->root = left_child;
+  else if (parent->sx == node)
+    parent->sx = left_child;
+  else if (parent->dx == node)
+    parent->dx = left_child;
+
+  if (left_child != NULL)
+    left_child->parent = parent;
 }
 
-static void balance(Node *node) {
-  if (node->parent == NULL) {
-    node->color = Black;
+static void balance(RBTree *tree, Node *node) {
+  Node *parent = node->parent;
+
+  if (parent == NULL)
+    return;
+
+  if (parent->color == Black)
+    return;
+
+  Node *grandpa = parent->parent;
+
+  if (grandpa == NULL) {
+    parent->color = Black;
     return;
   }
 
-  if (node->parent->parent == NULL || node->parent->color == Black)
-    return;
+  Node *uncle = grandpa->sx == parent ? grandpa->dx : grandpa->sx;
 
-  Node *grandpa = node->parent->parent;
-  Node *father = node->parent;
-  Node *uncle = grandpa->sx == father ? grandpa->dx : grandpa->sx;
-
-  if (uncle->color == Red) {
+  if (uncle != NULL && uncle->color == Red) {
+    parent->color = Black;
     grandpa->color = Red;
-    father->color = Black;
     uncle->color = Black;
 
-    balance(grandpa);
-  } else if (father->dx == node) {
-    rotate_sx(father);
-    balance(father);
-  } else {
-    grandpa->color = Red;
-    father->color = Black;
-
-    if (grandpa->sx == father)
-      rotate_dx(grandpa);
-    else if (grandpa->dx == father) {
-      rotate_sx(grandpa);
-      balance(node);
+    balance(tree, grandpa);
+  } else if (parent == grandpa->sx) {
+    if (node == parent->dx) {
+      rotate_sx(tree, parent);
+      parent = node;
     }
+    rotate_dx(tree, grandpa);
+    parent->color = Black;
+    grandpa->color = Red;
+  } else {
+    if (node == parent->sx) {
+      rotate_dx(tree, parent);
+      parent = node;
+    }
+    rotate_sx(tree, grandpa);
+    parent->color = Black;
+    grandpa->color = Red;
   }
-}
-
-static Node *find_insert(RBTree *tree, Node *node, Node *parent, wchar_t *key,
-                         Direction direction) {
-  if (node == FAKE_LEAF) {
-    node = calloc(1, sizeof(Node));
-
-    *node = (Node){key, NULL, Red, FAKE_LEAF, FAKE_LEAF, parent};
-    push(tree->nodes, node);
-
-    if (parent == NULL)
-      tree->root = node;
-    else if (direction == Left)
-      parent->sx = node;
-    else
-      parent->dx = node;
-
-    balance(node);
-    return node;
-  }
-
-  int cmp = wcscmp(key, node->key);
-
-  if (cmp == 0)
-    return node;
-
-  if (cmp < 0)
-    return find_insert(tree, node->sx, node, key, Left);
-
-  return find_insert(tree, node->dx, node, key, Right);
 }
 
 Node *node(RBTree *tree, wchar_t *key) {
-  size_t hash = wcshash(key);
-  Node *c = tree->cache[hash % tree->cache_size];
-  if (c != NULL && wcscmp(c->key, key) == 0) {
-    return c;
+  Node *node = tree->root;
+  Node *parent = NULL;
+  int cmp;
+
+  while (node != FAKE_LEAF) {
+    parent = node;
+    cmp = wcscmp(key, node->key);
+
+    if (cmp == 0)
+      return node;
+
+    if (cmp < 0)
+      node = node->sx;
+    else
+      node = node->dx;
   }
 
-  Node *node = find_insert(tree, tree->root, NULL, key, None);
+  node = calloc(1, sizeof(Node));
+  *node = (Node){key, NULL, Red, FAKE_LEAF, FAKE_LEAF, parent};
 
-  if (tree->root->parent != NULL) {
-    tree->root = tree->root->parent;
-  }
+  push(tree->nodes, node);
 
-  tree->cache[hash % tree->cache_size] = node;
+  if (parent == NULL) {
+    tree->root = node;
+    return node;
+  } else if (cmp < 0)
+    parent->sx = node;
+  else
+    parent->dx = node;
 
+  balance(tree, node);
   return node;
 }
 
@@ -157,19 +147,52 @@ void *value(RBTree *tree, wchar_t *key, size_t size) {
   return n->value;
 }
 
-void visit_node(Node *node) {
-  if (node == FAKE_LEAF)
+void visit_node(Node *node, int level) {
+  if (node == FAKE_LEAF) {
+    // fprintf(stderr, "\x1b[1;35m FAKE_LEAF\n");
     return;
+  }
 
-  if (node->color == Red)
-    fprintf(stderr, "\x1b[1;31m %ls - %p\n", node->key, node->value);
-  else
-    fprintf(stderr, "\x1b[1;35m %ls - %p\n", node->key, node->value);
+  if (node == NULL) {
+    // fprintf(stderr, "\x1b[1;35m NULL\n");
+    return;
+  }
 
-  visit_node(node->sx);
-  visit_node(node->dx);
+  // for (int i = 0; i < level; i++)
+  //   fprintf(stderr, "\t");
+
+  fprintf(stderr, "%ls\n", node->key);
+  // if (node->color == Red)
+  //   fprintf(stderr, "\x1b[1;31m %ls - %p\n", node->key, node->value);
+  // else
+  //   fprintf(stderr, "\x1b[1;35m %ls - %p\n", node->key, node->value);
+
+  visit_node(node->sx, level + 1);
+  visit_node(node->dx, level + 1);
 }
 
 // fprintf(stderr, "\x1b[1;30m\x1b[1;47m %ls - %p\n", node->key, node->value);
 
-void visit(RBTree *tree) { visit_node(tree->root); }
+void visit(RBTree *tree) { visit_node(tree->root, 0); }
+
+// int min_visit(Node *node, int level) {
+//   if (node == NULL)
+//     return level;
+//
+//   int left = min_visit(node->sx, level + 1);
+//   int right = min_visit(node->dx, level + 1);
+//   return (left < right ? left : right);
+// }
+//
+// int min_height(RBTree *tree) { return min_visit(tree->root, 0); }
+//
+// int max_visit(Node *node, int level) {
+//   if (node == NULL)
+//     return level;
+//
+//   int left = max_visit(node->sx, level + 1);
+//   int right = max_visit(node->dx, level + 1);
+//   return (left > right ? left : right);
+// }
+//
+// int max_height(RBTree *tree) { return max_visit(tree->root, 0); }

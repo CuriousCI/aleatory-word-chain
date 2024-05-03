@@ -7,16 +7,17 @@
 typedef struct String {
   wchar_t *str;
   size_t len;
+  size_t size;
 } String;
 
 /* Allocate an empty String. */
 String *str();
 
 /* Allocate a slice containing a single wchar_t. */
-wchar_t *slice_from_wchar_t(wchar_t c);
+wchar_t *wchar_t_to_str(wchar_t c);
 
 /* Allocate a String containing a single wchar_t. */
-String *string_from_wchar_t(wchar_t c);
+String *wchar_t_to_string(wchar_t c);
 
 // TODO: returns -1 if ....
 /* Appends a wchar_t at the end of the string. */

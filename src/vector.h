@@ -17,12 +17,6 @@ typedef struct Vector {
   size_t size;
 } Vector;
 
-// typedef struct Vector {
-//   void **data;
-//   size_t len;
-//   size_t size;
-// } Vector;
-
 /* Allocate an empty Vector on the heap. */
 Vector *vec();
 
@@ -34,3 +28,9 @@ void *get(Vector *vector, size_t index);
 void push(Vector *vector, void *item);
 
 #endif // !VECTOR_H_
+
+// typedef struct Vector {
+//   void **data;
+//   size_t len;
+//   size_t size;
+// } Vector;
