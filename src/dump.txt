@@ -1,0 +1,143 @@
+/* */
+// Vector *parse(wchar_t *str) {
+//   Vector *words = vec();
+//   Character state = SPECIAL;
+//
+//   String *token;
+//   push(words, wchar_t_to_str(L'.'));
+//
+//   do {
+//     wchar_t c = towlower(*str);
+//
+//     if (c == '\'') {
+//       if (state == LETTER) {
+//         append(token, c);
+//         push(words, token->str);
+//       }
+//
+//       state = SEPARATOR;
+//     } else if (c == L'?' || c == L'!' || c == L'.') {
+//       if (state == LETTER)
+//         push(words, token->str);
+//
+//       push(words, wchar_t_to_str(c));
+//       state = SPECIAL;
+//     } else if (iswalpha(c) || iswdigit(c)) {
+//       if (state == LETTER)
+//         append(token, c);
+//       else
+//         token = wchar_t_to_string(c);
+//
+//       state = LETTER;
+//     } else {
+//       if (state == LETTER)
+//         push(words, token->str);
+//
+//       state = SEPARATOR;
+//     }
+//
+//     str++;
+//   } while (*str);
+//
+//   return words;
+// }
+
+
+
+void _parse(wchar_t *str, void (*save)(wchar_t *)) {
+  typedef enum { LETTER, SEPARATOR } Character;
+
+  Character type = SEPARATOR;
+  String *token;
+
+  save(wchar_t_to_str(L'.'));
+
+  do {
+    wchar_t c = towlower(*str);
+
+    int is_alpha = iswalpha(c) || iswdigit(c),
+        is_special = c == L'?' || c == L'!' || c == L'.';
+
+    if (type == LETTER) {
+      if (is_alpha || c == '\'')
+        append(token, c);
+      if (!is_alpha)
+        save(token->str);
+    } else if (is_alpha)
+      token = wchar_t_to_string(c);
+
+    if (is_special)
+      save(wchar_t_to_str(c));
+
+    type = is_alpha ? LETTER : SEPARATOR;
+
+  } while (*++str);
+}
+
+
+
+void _parse(wchar_t *str, void (*save)(wchar_t *)) {
+  String *token;
+  int is_word = 0;
+
+  save(wctowcs(L'.'));
+
+  do {
+    wchar_t c = towlower(*str);
+
+    int is_alphanumeric = iswalpha(c) || iswdigit(c),
+        is_special = c == L'?' || c == L'!' || c == L'.';
+
+    if (is_word) {
+      if (is_alphanumeric || c == '\'')
+        append(token, c);
+      if (!is_alphanumeric)
+        save(token->str);
+    } else if (is_alphanumeric)
+      token = wctostr(c);
+
+    if (is_special)
+      save(wctowcs(c));
+
+    is_word = is_alphanumeric;
+  } while (*++str);
+}
+
+
+
+// Link *link;
+// for (int j = 0; links != NULL && j < links->size; j++) {
+//   Vector *bucket = at(links, j);
+//
+//   for (int k = 0; bucket != NULL && k < bucket->len; k++) {
+//     Entry *e = get(bucket, k);
+//
+//     Link *l = e->value;
+//
+//     if (total >= rng)
+//       break;
+//
+//     total += l->frequency;
+//     link = l;
+//   }
+// }
+
+// fprintf(stderr, "%ld\n", bucket->len);
+// fprintf(stderr, "BEFORE\n");
+// fprintf(stderr, "AFTER\n");
+// if (capitalize) {
+//   ((wchar_t *)link->entry->key)[0] =
+//       toupper(((wchar_t *)link->entry->key)[0]);
+//   printf("%ls ", (wchar_t *)link->entry->key);
+//   ((wchar_t *)link->entry->key)[0] =
+//       tolower(((wchar_t *)link->entry->key)[0]);
+//   capitalize = 0;
+// }
+// printf("%ls ", (wchar_t *)link->entry->key);
+// TODO: fast concatenation and print at the end
+// if (is_special(((wchar_t *)link->entry->key)[0]))
+//   capitalize = 1;
+
+// if (link != NULL)
+//   links = link->entry->value;
+// }

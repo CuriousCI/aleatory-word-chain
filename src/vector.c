@@ -3,8 +3,8 @@
 
 // Vector *vec() {
 //   Vector *vector = calloc(1, sizeof(Vector));
-//   vector->data = calloc(0, sizeof(void *));
 //   vector->len = 0;
+//   vector->data = calloc(vector->len, sizeof(void *));
 //   return vector;
 // }
 //
@@ -15,14 +15,19 @@
 //   vector->data[vector->len - 1] = item;
 // }
 
+// vector->size++;
+
 Vector *vec() {
   Vector *vector = calloc(1, sizeof(Vector));
+
   vector->len = 0;
   vector->size = 8;
   vector->data = calloc(vector->size, sizeof(void *));
+
   return vector;
 }
 
+// TODO: error handling
 void *get(Vector *vector, size_t index) { return vector->data[index]; }
 
 void push(Vector *vector, void *item) {

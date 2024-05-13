@@ -2,72 +2,49 @@ CFLAGS := -Wall -Wextra
 
 SRC_DIR := src
 
-# clean:
+SHELL := /bin/zsh
 
-# test
+# codex -h
+# codex --help
 
-# TODO: run tests on files
+# codex -c
+# codex --csv 
 
-# tree:
-# 	gcc ./src/*.c && ./a.out 
+# codex -c -p
+# codex --csv --parallel
 
-tree:
-	gcc ./src/*.c 
+# codex -g 10
+# codex --generate 10
+# codex -g 10 -w hello
+# codex --generate 10 --word hello
 
-exec:
-	gcc ./src/*.c
+# codex -g 10 -w hello -p
+# codex --generate 10 --word hello --parallel
 
-lotr:
-	cat lotr | ./a.out 1 > output
-# lotr:
-# 	cat ./tests/lotr | ./a.out 1 > output
-
-divcomm:
-	cat ./tests/test_5 | ./a.out 1 > output
 
 build:
-	gcc ./src/*.c
+	gcc ./src/*.c -o codex
 
-test_2:
-	cat ./tests/test_2 | ./a.out 1 > output
+help:
+	gcc ./src/*.c -o codex && ./codex --help
 
-# test_2:
-# 	gcc ./src/*.c && cat ./tests/test_2 | ./a.out 1 > output
+lotr:
+	gcc ./src/*.c -o codex && time cat ./tests/lotr | ./codex --csv > output
 
-run1:
-	gcc ./src/*.c && cat ./tests/test_5 | ./a.out 1 > output
+divina:
+	gcc ./src/*.c -o codex && time cat ./tests/test_5 | ./codex --csv > output
 
-run2:
-	gcc ./src/*.c && cat output | ./a.out 2 100000
+generate:
+	gcc ./src/*.c -o codex && time cat output | ./codex --generate 0 > text
 
-run3:
-	cat output | ./a.out 2 10000 > out
-	# gcc ./src/*.c && cat ./tests/test_5 | ./a.out 1 | ./a.out 2 10000
+generateX:
+	gcc ./src/*.c -o codex && time cat output | ./codex --generate 10000 > text
 
-run4:
-	gcc ./src/*.c && cat ./tests/lotr | ./a.out 1 > output
+generateY:
+	gcc ./src/*.c -o codex && time cat output | ./codex --generate 100000 > text
 
-run5:
-	gcc ./src/*.c && cat ./tests/lotr | ./a.out 1 | ./a.out 2 100000 > out
+generateZ:
+	gcc ./src/*.c -o codex && time cat output | ./codex --generate 1000000 > text
 
-buil:
-	gcc ./src/*.c && cat ./tests/lotr | ./a.out 1 > output
-
-geny:
-	gcc ./src/*.c && cat output | ./a.out 2 1 > out
-
-gen:
-	gcc ./src/*.c -g && cat output | ./a.out 2 100000 > out
-
-genx:
-	gcc ./src/*.c && cat output | ./a.out 2 1000000 > out
-
-bench:
-	gcc ./src/*.c && ./a.out
-
-# cargo build, cargo run, etc...
-
-test:
-	gcc ./src/*.c && ./a.out > output
-
-# benchmark with time, and create file with date
+generateE:
+	gcc ./src/*.c -o codex && time cat output | ./codex --generate 100000000 > text

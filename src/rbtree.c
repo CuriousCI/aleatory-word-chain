@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-typedef enum { Left, Right, None } Direction;
-
 Node *FAKE_LEAF = &(Node){NULL, NULL, Black, NULL, NULL, NULL};
 
 RBTree *tree() {
@@ -15,6 +13,8 @@ RBTree *tree() {
 
   return tree;
 }
+
+typedef enum { Left, Right } Direction;
 
 static void rotate_sx(RBTree *tree, Node *node) {
   Node *parent = node->parent;
@@ -146,53 +146,3 @@ void *value(RBTree *tree, wchar_t *key, size_t size) {
 
   return n->value;
 }
-
-void visit_node(Node *node, int level) {
-  if (node == FAKE_LEAF) {
-    // fprintf(stderr, "\x1b[1;35m FAKE_LEAF\n");
-    return;
-  }
-
-  if (node == NULL) {
-    // fprintf(stderr, "\x1b[1;35m NULL\n");
-    return;
-  }
-
-  // for (int i = 0; i < level; i++)
-  //   fprintf(stderr, "\t");
-
-  fprintf(stderr, "%ls\n", node->key);
-  // if (node->color == Red)
-  //   fprintf(stderr, "\x1b[1;31m %ls - %p\n", node->key, node->value);
-  // else
-  //   fprintf(stderr, "\x1b[1;35m %ls - %p\n", node->key, node->value);
-
-  visit_node(node->sx, level + 1);
-  visit_node(node->dx, level + 1);
-}
-
-// fprintf(stderr, "\x1b[1;30m\x1b[1;47m %ls - %p\n", node->key, node->value);
-
-void visit(RBTree *tree) { visit_node(tree->root, 0); }
-
-// int min_visit(Node *node, int level) {
-//   if (node == NULL)
-//     return level;
-//
-//   int left = min_visit(node->sx, level + 1);
-//   int right = min_visit(node->dx, level + 1);
-//   return (left < right ? left : right);
-// }
-//
-// int min_height(RBTree *tree) { return min_visit(tree->root, 0); }
-//
-// int max_visit(Node *node, int level) {
-//   if (node == NULL)
-//     return level;
-//
-//   int left = max_visit(node->sx, level + 1);
-//   int right = max_visit(node->dx, level + 1);
-//   return (left > right ? left : right);
-// }
-//
-// int max_height(RBTree *tree) { return max_visit(tree->root, 0); }

@@ -10,29 +10,7 @@
 // TODO: structs
 
 /* */
-// typedef struct Word {
-//   wchar_t *slice;
-//   Vector *links;
-// } Word;
-
-/* Compares the slices in two words with with wcscmp. */
-// int wordcmp(void *w1, void *w2);
-
-/* */
 RBTree *parse_csv(wchar_t *csv);
-
-// TODO: double instead of float? Maybe long double?
-/* */
-
-// typedef struct Link {
-//   Entry *entry;
-//   float frequency;
-// } Link;
-
-typedef struct Link {
-  Node *node;
-  float frequency;
-} Link;
 
 /* */
 // Vector *graph_from_slice(wchar_t *slice);
@@ -41,7 +19,6 @@ typedef struct Link {
 // TODO: generate table
 // TODO: then generate string
 // TODO: then save string
-// TODO: lettere accentate italiane se possibile / utf-8 letters?
 
 /* */
 void print_table(wchar_t *slice);

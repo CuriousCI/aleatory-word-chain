@@ -1,1 +1,16 @@
 Cosa dicono le previsioni del tempo? Oggi c'era molto caldo!
+
+// # TODO: codex -e
+// # TODO: codex --encode
+
+// # TODO: codex -d -n 10
+// # TODO: codex --decode -n 10
+// # TODO: codex -d -n 10 -w hello
+// # TODO: codex --decode -n 10 --word hello
+
+// # TODO: codex -g -n 10
+// # TODO: codex --generate --number 10
+// # TODO: codex -g -n 10 -w hello
+// # TODO: codex --generate --number 10 --word hello
+
+// -----------------------------------------

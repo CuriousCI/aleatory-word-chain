@@ -13,24 +13,10 @@
 #include <wchar.h>
 #include <wctype.h>
 
-// int wordcmp(void *w1, void *w2) {
-//   return wcscmp(((Word *)w1)->slice, ((Word *)w2)->slice);
-// }
-
-// Word *word_from_string(String *string) {
-//   Word *word = malloc(sizeof(Word));
-//   word->slice = string->str;
-//   word->links = vec();
-//
-//   return word;
-// }
-
 // TODO: const pointer and const parameters
 // TODO: graph, table are alla synonyms
 // TODO: if read utf8 non italian wchar_tacter, spit out "invalid
 // wchar_tacter,
-
-int is_special(wchar_t c) { return c == '?' || c == '!' || c == '.'; }
 
 typedef enum { SPECIAL, SEPARATOR, LETTER } Character;
 
@@ -53,7 +39,7 @@ static Vector *parse_words(wchar_t *slice) {
 
       state = SEPARATOR;
     }
-    if (is_special(c)) {
+    if (c == '?' || c == '!' || c == '.') {
       if (state == LETTER)
         push(words, token->str);
 
@@ -133,6 +119,13 @@ void print_table(wchar_t *str) {
 /* Possibile states of the FSM (finite state machine) that reads CSV's */
 typedef enum { WORD, KEY, VALUE } Csv;
 
+typedef struct Link {
+  Node *node;
+  float frequency;
+} Link;
+
+// TODO: double instead of float? Maybe long double?
+/* */
 RBTree *parse_csv(wchar_t *csv) {
   // HashMap *graph = hash_map(1000);
 
