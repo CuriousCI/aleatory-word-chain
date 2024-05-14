@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <wchar.h>
 
+void vectorize(void *vector, wchar_t *word) { push((Vector *)vector, word); }
+
 int main(int argc, char **argv) {
   setlocale(LC_ALL, "");
 
@@ -20,16 +22,15 @@ int main(int argc, char **argv) {
   char *file = NULL, *output = NULL, *word = NULL;
 
   struct option options[] = {
-      {"help", no_argument, 0, 0},         {"csv", no_argument, 0, 0},
-      {"text", required_argument, 0, 0},   {"word", required_argument, 0, 0},
-      {"parallel", no_argument, 0, 0},     {"file", required_argument, 0, 0},
-      {"output", required_argument, 0, 0}, {0, 0, 0, 0},
+      {"help", no_argument},         {"csv", no_argument},
+      {"text", required_argument},   {"word", required_argument},
+      {"parallel", no_argument},     {"file", required_argument},
+      {"output", required_argument}, {0, 0},
   };
 
-  // words count!
-
   int option, index;
-  while ((option = getopt_long(argc, argv, "hcg:w:p", options, &index)) != -1) {
+  while ((option = getopt_long(argc, argv, "hct:w:pf:o:", options, &index)) !=
+         -1) {
     if (option == 0 && index > 0 && index < 5)
       option = "hctwpfo"[index];
 
@@ -67,17 +68,16 @@ int main(int argc, char **argv) {
     help = 1;
 
   if (help)
-    fprintf(stderr,
-            "Usage: codex ...\n"
-            "OPTIONS\n"
-            " -h, --help            \t\tshow this menu\n"
-            " -c, --csv             \t\tconvert input to csv\n"
-            " -t, --text=NUMBER     \t\tgenerate NUMBER words from stdin\n"
-            " -f, --file=FILE       \t\tinput file\n"
-            " -o, --output=FILE     \t\toutput file\n"
-            " -w, --word=WORD       \t\tgenerate starting from WORD word\n"
-            " -p, --parallel        \t\trun this command using multiple "
-            "processes\n");
+    fprintf(stderr, "Usage: codex ...\n"
+                    "OPTIONS\n"
+                    " -h, --help       \t\tshow this menu\n"
+                    " -c, --csv        \t\tconvert input to csv\n"
+                    " -t, --text=NUMBER\t\tgenerate NUMBER words from stdin\n"
+                    " -f, --file=FILE  \t\tinput file\n"
+                    " -o, --output=FILE\t\toutput file\n"
+                    " -w, --word=WORD  \t\tgenerate starting from WORD word\n"
+                    " -p, --parallel   \t\trun this command using multiple "
+                    "processes\n");
   else if (parallel) {
     if (csv) {
     } else if (text) {
@@ -109,13 +109,24 @@ int main(int argc, char **argv) {
 
     if (csv) {
       start = clock();
-      Vector *words = parse(str);
+      // Vector *words = parse(str);
+      Vector *words = vec();
+
+      wchar_t *word = NULL;
+      struct parser *p = NULL;
+      while ((word = generic_parse_2(str, p)) != NULL)
+        push(words, word);
+
+      // generic_parse(str, words, vectorize);
       end = clock();
       fprintf(stderr, "SEPARATING words - %g\n",
               (float)(end - start) / (float)CLOCKS_PER_SEC);
 
       start = clock();
-      RBTree *counter = count(words);
+      RBTree *counter = tree();
+      for (size_t i = 0; i < words->len - 1; i++)
+        generic_count(get(words, i), get(words, i + 1), counter);
+      // RBTree *counter = count(words);
       end = clock();
       fprintf(stderr, "COUNTING words - %g\n",
               (float)(end - start) / (float)CLOCKS_PER_SEC);
@@ -142,3 +153,10 @@ int main(int argc, char **argv) {
 }
 
 // pipe2(NULL, O_DIRECT);
+
+// struct option options[] = {
+//     {"help", no_argument, 0, 0},         {"csv", no_argument, 0, 0},
+//     {"text", required_argument, 0, 0},   {"word", required_argument, 0, 0},
+//     {"parallel", no_argument, 0, 0},     {"file", required_argument, 0, 0},
+//     {"output", required_argument, 0, 0}, {0, 0, 0, 0},
+// };
