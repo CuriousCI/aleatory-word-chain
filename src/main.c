@@ -1,162 +1,183 @@
 #define _GNU_SOURCE
-#include "decoder.h"
-#include "encoder.h"
-#include "string.h"
 #include <fcntl.h>
-#include <getopt.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <wchar.h>
 
-void vectorize(void *vector, wchar_t *word) { push((Vector *)vector, word); }
+#include "codex.h"
+#include "csv.h"
+#include "map.h"
+#include "text.h"
+#include "vec.h"
 
-int main(int argc, char **argv) {
-  setlocale(LC_ALL, "");
+/* EOC = End Of Communication */
 
-  int help = 0, csv = 0, text = 0, parallel = 0;
-  int number = 0;
-  char *file = NULL, *output = NULL, *word = NULL;
-
-  struct option options[] = {
-      {"help", no_argument},         {"csv", no_argument},
-      {"text", required_argument},   {"word", required_argument},
-      {"parallel", no_argument},     {"file", required_argument},
-      {"output", required_argument}, {0, 0},
-  };
-
-  int option, index;
-  while ((option = getopt_long(argc, argv, "hct:w:pf:o:", options, &index)) !=
-         -1) {
-    if (option == 0 && index > 0 && index < 5)
-      option = "hctwpfo"[index];
-
-    switch (option) {
-    case 'h':
-      help = 1;
-      break;
-    case 'c':
-      csv = 1;
-      break;
-    case 't':
-      text = 1;
-      number = atoi(optarg);
-      if (number < 0)
-        fprintf(stderr, "--text %d :text must have at least 0 words\n", number);
-      break;
-    case 'w':
-      word = optarg;
-      break;
-    case 'p':
-      parallel = 1;
-      break;
-    case 'f':
-      file = optarg;
-      break;
-    case 'o':
-      output = optarg;
-      break;
-    default:
-      help = 1;
-    }
-  }
-
-  if (!(csv || text))
-    help = 1;
-
-  if (help)
-    fprintf(stderr, "Usage: codex ...\n"
-                    "OPTIONS\n"
-                    " -h, --help       \t\tshow this menu\n"
-                    " -c, --csv        \t\tconvert input to csv\n"
-                    " -t, --text=NUMBER\t\tgenerate NUMBER words from stdin\n"
-                    " -f, --file=FILE  \t\tinput file\n"
-                    " -o, --output=FILE\t\toutput file\n"
-                    " -w, --word=WORD  \t\tgenerate starting from WORD word\n"
-                    " -p, --parallel   \t\trun this command using multiple "
-                    "processes\n");
-  else if (parallel) {
-    if (csv) {
-    } else if (text) {
-      if (word) {
-      } else {
-      }
-    }
-  } else {
-
-    int start = clock();
-    wchar_t c;
-    String *input = string();
-
-    if (file) {
-      // INPUT FILE
-    }
-
-    if (output) {
-      // OUTPUT FILE
-    }
-
-    while ((c = getwc(stdin)) != WEOF && !ferror(stdin))
-      append(input, c);
-    wchar_t *str = input->str;
-    int end = clock();
-
-    fprintf(stderr, "READING file - %g\n",
-            (float)(end - start) / (float)CLOCKS_PER_SEC);
-
-    if (csv) {
-      start = clock();
-      // Vector *words = parse(str);
-      Vector *words = vec();
-
-      wchar_t *word = NULL;
-      struct parser *p = NULL;
-      while ((word = generic_parse_2(str, p)) != NULL)
-        push(words, word);
-
-      // generic_parse(str, words, vectorize);
-      end = clock();
-      fprintf(stderr, "SEPARATING words - %g\n",
-              (float)(end - start) / (float)CLOCKS_PER_SEC);
-
-      start = clock();
-      RBTree *counter = tree();
-      for (size_t i = 0; i < words->len - 1; i++)
-        generic_count(get(words, i), get(words, i + 1), counter);
-      // RBTree *counter = count(words);
-      end = clock();
-      fprintf(stderr, "COUNTING words - %g\n",
-              (float)(end - start) / (float)CLOCKS_PER_SEC);
-
-      start = clock();
-      save(counter);
-      end = clock();
-      fprintf(stderr, "SAVING words - %g\n",
-              (float)(end - start) / (float)CLOCKS_PER_SEC);
-
-      // save(count(parse(str)));
-    } else if (text) {
-      if (word) {
-        size_t length = strlen(word);
-        wchar_t *start = calloc(length, sizeof(wchar_t));
-        mbstowcs(start, word, length);
-        generate_from(parse_csv(str), number, start);
-      } else
-        generate(parse_csv(str), number);
-    }
-  }
-
-  exit(EXIT_SUCCESS);
+/* Redefined to match 'int (*collect)(void *, char *)' API. */
+int _push(void *vec, char *item) {
+    return push(vec, item);
 }
 
-// pipe2(NULL, O_DIRECT);
+/* Redefined to match 'int (*collect)(void *, char *)' API. */
+int _fprintf(void *stream, char *buf) {
+    return fprintf(stream, "%s\n", buf) < 0 ? -1 : 0;
+}
 
-// struct option options[] = {
-//     {"help", no_argument, 0, 0},         {"csv", no_argument, 0, 0},
-//     {"text", required_argument, 0, 0},   {"word", required_argument, 0, 0},
-//     {"parallel", no_argument, 0, 0},     {"file", required_argument, 0, 0},
-//     {"output", required_argument, 0, 0}, {0, 0, 0, 0},
-// };
+/* Redefined to match 'char *(*consume)(void *)' API. */
+char *_getstr(void *stream) {
+    char *lineptr = NULL;
+    size_t n = 0, read;
+
+    read = getline(&lineptr, &n, stream);
+    /* EMPTY byte means EOC. */
+    if (*lineptr == '\n')
+        return NULL;
+
+    lineptr[read - 1] = 0;
+    return lineptr;
+}
+
+/* Redefined to match 'char *(*consume)(void *)' API. */
+char *_next(void *iter) {
+    return next(iter);
+}
+
+/* Quality of life improvement. */
+void pipe3(FILE **out, FILE **in) {
+    int pipedes[2];
+
+    if (pipe(pipedes) == -1)
+        panic("couldn't open pipe");
+
+    if ((*in = fdopen(pipedes[0], "r")) == NULL)
+        panic("couldn't open file on read pipe");
+
+    if ((*out = fdopen(pipedes[1], "w")) == NULL)
+        panic("couldn't open file on write pipe");
+}
+
+int main(int argc, char **argv) {
+    flags_t flags;
+    FILE *stream = stdin, *out = stdout;
+
+    getflags(argc, argv, &flags);
+
+    setlocale(LC_ALL, flags.locale);
+    /* Required as some locales use commas for decimal numbers. */
+    setlocale(LC_NUMERIC, "en_US.UTF-8");
+
+    if (flags.help) {
+        help(&flags);
+        exit(EXIT_SUCCESS);
+    }
+
+    if (flags.version) {
+        version();
+        exit(EXIT_SUCCESS);
+    }
+
+    if (flags.file && (stream = fopen(flags.file, "r")) == NULL)
+        panic("input file");
+
+    if (flags.output && (out = fopen(flags.output, "w")) == NULL)
+        panic("output file");
+
+    /* Single process. Uses the same API as the multi-process solution. */
+    if (!flags.parallel && flags.csv) {
+        struct vec_t *words = vec();
+        struct map_t *counters = map();
+
+        split(stream, _push, words);
+        count(counters, _next, iter(words));
+        csv(counters, out);
+
+        exit(EXIT_SUCCESS);
+    }
+
+    /* Single process. Uses the same API as the multi-process solution. */
+    if (!flags.parallel && flags.text) {
+        struct vec_t *rows = vec();
+        struct map_t *csv = map();
+
+        lines(stream, _push, rows);
+        insert(csv, _next, iter(rows));
+        text(csv, out, flags.number, flags.word);
+
+        exit(EXIT_SUCCESS);
+    }
+
+    if (flags.parallel) {
+        pid_t pid = 0;
+        FILE *parser_out, *counter_in, *counter_out, *printer_in;
+
+        pipe3(&parser_out, &counter_in);
+        if ((pid = fork()) == -1)
+            panic("fork _parser");
+
+        /* PROCESS 1. */
+        if (pid == 0) {
+            if (flags.csv)
+                /* Reads input and splits the words and sends them to counter. */
+                split(stream, _fprintf, parser_out);
+            if (flags.text)
+                /* Reads input and splits the lines and sends them to generator. */
+                lines(stream, _fprintf, parser_out);
+
+            /* EOC */
+            fprintf(parser_out, "\n");
+            fflush(parser_out);
+
+            exit(EXIT_SUCCESS);
+        }
+
+        pipe3(&counter_out, &printer_in);
+        if ((pid = fork()) == -1)
+            panic("fork _counter");
+
+        /* PROCESS 2. */
+        if (pid == 0) {
+            if (flags.csv) {
+                /* Counts the words and converts the counters to CSV lines, which are sent the printer. */
+                struct map_t *counters = map();
+                count(counters, _getstr, counter_in);
+                csv(counters, counter_out);
+            }
+
+            if (flags.text) {
+                /* Builds the csv and generates the text which is sent to the printer. */
+                struct map_t *csv = map();
+                insert(csv, _getstr, counter_in);
+                text(csv, counter_out, flags.number, flags.word);
+            }
+
+            fprintf(counter_out, "\n");
+            fflush(counter_out);
+
+            /* EOC */
+
+            exit(EXIT_SUCCESS);
+        }
+
+        /* PROCESS 3. Prints results from PROCESS 2. */
+        {
+            char *lineptr = NULL;
+            size_t n = 0;
+
+            while (1) {
+                if (flags.csv)
+                    getline(&lineptr, &n, printer_in);
+                else if (flags.text)
+                    getdelim(&lineptr, &n, ' ', printer_in);
+
+                if (*lineptr == '\n') break;
+
+                fprintf(out, "%s", lineptr);
+                lineptr = NULL;
+            }
+            exit(EXIT_SUCCESS);
+        }
+    }
+
+    exit(EXIT_SUCCESS);
+}
