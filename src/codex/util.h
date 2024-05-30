@@ -1,10 +1,10 @@
-#ifndef CODEX_H_
-#define CODEX_H_
+#ifndef UTIL_H_
+#define UTIL_H_
 
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "map.h"
+#include "../collections/map.h"
 
 typedef struct flags_t {
     bool help, version, csv, parallel, text;
@@ -13,15 +13,18 @@ typedef struct flags_t {
 } flags_t;
 
 /* I'm feeling Rust today. Log error and exit(EXIT_FAILURE).  */
-void panic(char *error);
+void expect(char *message);
+
+/* I'm feeling Rust today. Log perror if present and exit(EXIT_FAILURE). It's useful for errors which are system related, set errno and don't have anything to do with the user input. */
+void panic();
 
 /* Read flags */
 void getflags(int argc, char *argv[], flags_t *flags);
 
 /* Print usage information and exit. */
-void help(flags_t *flags);
+void help();
 
-/*Print version information and exit. */
+/* Print version information and exit. */
 void version();
 
-#endif /* codex.h */
+#endif /* util.h */

@@ -1,0 +1,166 @@
+CODEX
+
+DISCLAIMER* - i commenti e il codice li ho preferiti scrivere in inglese per coerenza
+
+NOTA* - se preferisce, è possibile eseguire `sudo make install` per installare il progetto (`codex`) e invocare `man codex` per vedere la pagina man; alternativamente può anche eseguire `man ./codex.1`
+
+NOTA* - è disponibile anche `sudo make uninstall`
+
+DESCRIZIONE
+
+    Il programma ha due opzioni principali '--csv' (esegue il compito 1) e '--text' (esegue il compito 2). 
+
+    Di default ho deciso che il testo di input viene preso da `stdin`, e quello di output scritto su `stdout` in modo da facilitare l'interazione con altri comandi tramite redirection (un po' come fa `grep`).
+
+    È comunque possibile specificare con -f o --file il file di input e con -o o --output il file di output.
+
+COMPITO 1
+
+    --csv ha l'opzione -p o --parallel per eseguire il comando con i 3 processi paralleli
+
+COMPITO 2
+
+    --text ha varie opzioni:
+        -n, --number per specificare il numero di parole da generare (di default 0)
+        -w, --word per specificare la parola iniziale
+        -p, --parallel per eseguire il comando con i 3 processi paralleli
+
+OPZIONI COMUNI
+
+    Oltre a -p, -f e -o c'è l'opzione -l o --locale per specificare un locale per il testo in input 
+        - il programma considera il locale di default del sistema
+        - se questo non è l'italiano è possibile specificarlo proprio grazie a --locale
+        - è possibile vedere un elenco di locale installati sulla macchina con `locale -a`
+
+ESEMPI D'USO
+
+    --text ha l'opzione -p per eseguire il comando con i 3 processi paralleli
+
+    codex --csv -f SRC -o DST (task 1)
+
+    codex --text -n 1000 -f SRC -p > DST (task 2)
+
+    codex --csv -f SRC -p --locale it_IT.UTF-8 > DST (task 2)
+
+    codex --text -n 1000 -f SRC -p -w ciao > DST (task 2)
+
+    cat tests/lotr | grep -i frodo | codex --csv |  codex --text -n 100 -w frodo 
+
+COLLECTION, COLLECT, CONSUME API
+
+    La parte più intressante del progetto potrebbe essere questa l'API COLLECTION, COLLECT e CONSUME. A cosa serve? 
+
+    Nel single-process è utile mettere le parole generate in un ARRAY o un VECTOR
+    Nel multi-process è utile mandarle direttamente su una PIPE 
+
+    Per non scrivere due volte la funzione, mi sono ispirato un po' ad altri linguaggi (come Rust). 
+        - `void *collection`
+            - può essere qualsiasi cosa: un VEC, un ARRAY, una PIPE, un FILE etc...
+
+        - `int (*collect)(void *, char *)`
+            - salva un dato (nel mio caso sempre una stringa) dentro alla `collection`
+            - tramite collect() si può decidere di fare `push()` in un VETTORE, o di fare `fprintf()` in un FILE o `write()` in una PIPE.
+
+        - `char *(*consume)(void *)`
+            - tramite consume() si può leggere un dato da una collection (magari con un `getline()` da un FILE o con un `next()` su un ITER)
+
+SCELTA DELLA PAROLA SUCCESSIVA
+
+    Possiamo immaginare una linea fra 0 e 1 divisa in tante sezioni; ogni sezione è associata ad una parola, ed è grande quanto la frequenza di tale parola
+
+    Ad esempio, una parola che ha il 0.3 di frequenza occuperà una sezione grande 0.3
+
+    0                    1
+    |________|__|__|_____|
+
+    Con `rand()` viene scelto un punto a caso fra 0 e 1
+
+    0                    1
+    |____________x_______|
+
+    Ora l'obiettivo è cercare la sezione associata a quel punto, e la parola associata a tale sezione sarà la successiva.
+
+    0                    1
+    |________|__|x_|_____|
+
+    In questo modo, dato che `rand()` dovrebbe essere equiprobabile, le parole avranno una probabilità di essere scelte uguale alla loro frequenza.
+
+
+STRUTTURE DATI
+    Per le varie strutture ho deciso di usare l'ENCAPSULATION per nascondere la struttura interna, mettendo a disposizione solamente l'API necessario ad usare la struttura (limitato all'uso che ne faccio nel programma; è inutile scrivere una funzione `remove()` per la MAP se non serve)
+
+    VEC_T
+        È una struttura dati simile al `std::vector` di C++ o al `Vec<T>` di Rust: un ARRAY. 
+        Permette solo di aggiungere elementi in coda, ed è accessibile solo tramite ITER.
+
+        Non ho usato la LinkedList per provare a sfruttare al massimo il caching delle aree di memoria contigue. 
+
+    MAP_T
+        Ho sperimentato con diverse strutture per memorizzare i dati, e ho deciso di rimanere su una MAP implementata tramite Red Black Tree (studiato al corso di "Introduzione agli algoritmi", lo avevo già implementato l'anno scorso). 
+
+        Il Red Black Tree è un po' più lento dell'HashMap con cui avevo inizialmente provato, ma non ho il problema del dimensionamento della memoria: occupa solo la memoria che gli serve e non fa allocazioni inutili, e non devo decidere una formula per ottimizzare le dimensioni della mappa in base alla dimensione dell'input.
+
+        Inoltre, non mi andava di scrivere il codice per ridimensionare l'HashMap, e non avrei fatto in tempo ad implementare la SwissMap di Google. 
+
+    ITER_T
+        Iteratore su una collezione. Quando viene invocato `next()` su un iteratore, ritorna l'elemento attuale se presente e sposta l'iteratore all'elemento successivo, altrimenti ritorna NULL.
+
+    COUNTER_T
+
+        Per contare le frequenze delle parole uso una MAP che ad ogni parola associa un COUNTER_T
+        
+            COUNTERS = {
+                WORD1: (COUNTER_T) {
+                    COUNT, // Quante volte compare WORD1
+                    NEXT_WORDS = {
+                        WORD2: COUNT // Quante volte compare WORD2 dopo WORD1
+                    }
+                }
+            }
+
+    ROW_T
+        
+        Per rapprsentare il CSV nel compito 2 uso una MAP che ad ogni parola associa la una riga, che è a sua volta una MAP che associa ad ogni parola la rispettiva frequenza 
+            CSV = {
+                WORD1: (ROW_T) {
+                    WORD2: FREQUENCY // La frequenza di WORD2 dopo WORD1
+                }
+            }
+
+GESTIONE ERRORI
+
+    La maggior parte degli errori nelle funzioni interne vengono propagati (ritornando -1 o NULL). Il programma imposta all'inizio errno = 0 per fare in modo che se l'errore è generato per motivi di sistema, venga stampato tramite perror(), altrimenti si tratta di un errore della funzione, e stampo il messaggio generico.  
+
+    Quando non è possibile propagare un errore, viene usato `panic()` che stampa l'errore, eventualmente con `perror()` se necessario ed esegue exit(EXIT_FAILURE);
+
+PARSER
+    Alcune funzioni dell'API di C hanno uno `stato interno` che persiste (grazie a `static`) nelle varie chiamate. Ad esempio `strtok()` o `wctomb()`.
+    Per il parser, ho deciso di prendere in input un carattere alla volta, e di generare 0, 1 o 2 TOKEN in base allo stato interno (il TOKEN attuale).
+
+    - ad esempio, se lo stato interno è "cia" e leggo 'o', lo stato interno diventerà "ciao" e genero 0 token; se poi leggo ' ', genero il token "ciao" e lo stato interno diventa ""
+
+    Questa decisione è comoda perché permette di lavorare con i wchar_t solo all'inizio (per vedere se il carattere è effettivamente una lettera o meno), per poi convertirli uno ad uno in una stringa di 1 o più byte (in base alla codifica UTF-8)
+
+    Di fatto, il programma lavora con char, tranne il parser e una piccolissima parte del generatore di testo (serve per redere le lettere accentate maiuscole).
+
+ALTRO
+    Uso un formattatore automatico per formattare il codice. Di fatto, ho un file .clang-format per specificare al formattatore alcune regole su come formattare.
+
+    Ho deciso anche di scrivere una pagina MAN e aggiungere MAKE INSTALL e MAKE UNINSTALL perchè per una volta ho voluto provare a scrivere un comando relativamente "completo"
+
+    Durante la scrittura il codice è stato compilato con `-ansi` e `-Wpedantic` per rispettare il più possibile lo standard ANSI C. Per questo ci sono alcune cose strane come
+        - tutti i commenti sono della forma /* */
+        - tutte le variabili sono dichiarate all'inizio del blocco
+
+ * - FILE *STREAM - is the input stream (stdin, a file, a pipe, a socket etc...)
+ * - int (*COLLECT)(void *, char *) - is takes COLLECTION and a NULL terminated string;
+ *   - this API let's the user do anything push to an array, insert in a set, write to a pipe or a file etc...
+ *   - it could generate -1 (ERROR), case in which SPLIT propagates it
+ * - void *COLLECTION - the collection in which to collect the TOKENS
+ *   - it could be an array, a set, a file, a pipe etc...
+
+
+ * - void *COLLECTION - collection from which to read TOKENS
+ * - char *(*CONSUME)(void *) - generates token from collection
+ *   - when CONSUME returns NULL it means there aren't any tokens left
+ *   - it is very versatile, as it could read tokens from an array, or read them from a FILE

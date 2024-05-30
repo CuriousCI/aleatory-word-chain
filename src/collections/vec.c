@@ -2,12 +2,14 @@
 
 #include <stdlib.h>
 
+/* A resizing factor of 2 is too big. */
 #define GOLDEN_RATIO 1.618034
 
-/* I chose to allocate items contigously instead of using a Linked List. */
 /* Rust does it with Vec<T> and C++ with std::vector, it shouldn't give many problems. */
 static struct vec_t {
     void **items;
+    /* LEN is the actual number of items. */
+    /* CAPACITY is the allocated size. */
     size_t len, capacity;
 } vec_t;
 
@@ -30,7 +32,7 @@ struct vec_t *vec() {
 
 int push(struct vec_t *vec, void *item) {
     if (++vec->len >= vec->capacity) {
-        /* The CAPACITY amortizes the numbers of calls to REALLOC. */
+        /* CAPACITY amortizes the numbers of calls to REALLOC. */
         vec->capacity *= GOLDEN_RATIO;
         vec->items = realloc(vec->items, vec->capacity * sizeof(void *));
 
@@ -38,13 +40,16 @@ int push(struct vec_t *vec, void *item) {
             return -1;
     }
 
+    /* PUSH to back. */
     vec->items[vec->len - 1] = item;
 
     return 0;
 }
 
+/* Useful to have a common interface to iterate collections. */
 static struct iter_t {
-    void **item, **last;
+    /* Current ITEM and pointer after last ITEM. */
+    void **item, **end;
 } iter_t;
 
 struct iter_t *iter(const struct vec_t *vec) {
@@ -54,29 +59,12 @@ struct iter_t *iter(const struct vec_t *vec) {
         return NULL;
 
     iter->item = vec->items;
-    iter->last = vec->items + vec->len;
+    iter->end = vec->items + vec->len;
 
     return iter;
 }
 
+/* Check if ITER is empty. Return current ITEM and set ITEM to next.  */
 void *next(struct iter_t *iter) {
-    return iter->item >= iter->last ? NULL : *iter->item++;
+    return iter->item >= iter->end ? NULL : *iter->item++;
 }
-
-/* void **items;
-size_t len, index; */
-/* TODO: set(ERRNO) to bad address */
-/* if (vec == NULL)
-    return NULL; */
-/* Initialize ITER with the first item of the VEC. */
-/* iter->items = vec->items;
-iter->len = vec->len;
-iter->index = 0; */
-
-/* if (iter->index >= iter->len || iter == NULL)
-    return NULL;
-
-return iter->items[iter->index++]; */
-/* if ()
-    return NULL;*/
-/* return *iter->item++;*/

@@ -27,22 +27,14 @@ char *key(struct entry_t *entry) {
     return entry->key;
 }
 
-void *value(struct entry_t *entry) {
-    return entry->value;
-}
-
-void *alloc(struct entry_t *entry, size_t size) {
-    if (entry->value == NULL)
-        if ((entry->value = calloc(1, sizeof(size))) == NULL)
-            return NULL;
-
-    return entry->value;
+void **value(struct entry_t *entry) {
+    return &entry->value;
 }
 
 static struct map_t {
     /* Red Black Tree's ROOT and NIL leaves. */
     struct entry_t *root, *NIL;
-    /* Easier iteration of MAP's ENTRIES. */
+    /* ENTRIES are stored in a VEC for easier iteration. */
     struct vec_t *entries;
 } map_t;
 
@@ -77,7 +69,7 @@ struct map_t *map() {
 
 struct iter_t *entries(const struct map_t *map) { return iter(map->entries); }
 
-struct entry_t *entry(struct map_t *map, char *key) {
+struct entry_t *find(struct map_t *map, char *key) {
     /* Start TREE visit from ROOT. */
     struct entry_t *entry = map->root, *parent = NULL;
     int cmp;
@@ -102,8 +94,7 @@ struct entry_t *entry(struct map_t *map, char *key) {
 
     entry->key = key;
     entry->value = NULL;
-    /* New NODEs are RED. */
-    entry->color = RED;
+    entry->color = RED; /* New NODEs are RED. */
     entry->left = map->NIL;
     entry->right = map->NIL;
     entry->parent = parent;
@@ -113,11 +104,10 @@ struct entry_t *entry(struct map_t *map, char *key) {
         return NULL;
     }
 
-    if (parent == NULL)
-        /* PARENT == NULL implies there is no ROOT. */
+    /* !PARENT implies there is no ROOT. */
+    if (!parent)
         return (map->root = entry);
 
-    /* Insertion. */
     if (cmp < 0)
         parent->left = entry;
     else

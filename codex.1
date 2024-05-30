@@ -12,22 +12,59 @@
 .Op Fl f Ar file
 .Op Fl o Ar output
 
-codex --help
+codex --csv -f SRC -o DST (task 1)
 
-cat file | codex -c > output
+codex --text -n 1000 -f SRC -p > DST (task 2)
 
-codex -c -f file -o output
+codex --csv -f SRC -p --locale it_IT.UTF-8 > DST (task 2)
 
-cat input.csv | codex -t 1000 -w ciao --output file.out -p
+codex --text -n 1000 -f SRC -p -w ciao > DST (task 2)
+
+cat tests/lotr | grep -i frodo | codex --csv |  codex --text -n 100 -w frodo 
 
 .Sh DESCRIPTION
 
 The
 .Nm
-utility
-displays the
-manual page entitled
-.Ar name .
+command generates realistic random text from a source.
+
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl h, -help
+Print usage information and exit.
+.It Fl v, -version
+Print version information and exit.
+.It Fl c, -csv 
+Read source text and generate CSV. If no 
+.Ar file 
+is specified takes the text from 
+.Ar stdin .
+.It Fl t, -text Ar number
+Generate text with
+.Ar number
+words. If no
+.Fl w
+is specified, it starts randomly from '.', '?' or '!'. If no
+.Fl f 
+is specified, it reads the standard CSV from
+.Ar stdin .
+.It Fl w, -word Ar word
+Specify starting 
+.Ar word
+for text generation.
+.It Fl p, -parallel
+Run command using parallel processeses.
+.It Fl f, -file Ar file
+Input
+.Ar file
+to convert to CSV or to start generation from.
+.It Fl o, -output Ar file
+Output  
+.Ar file
+where csv or generated text are written.
+.Sh AUTHORS
+Codex was written by Ionut Cicio.
+
 .\" Pages may be selected according to
 .\" a specific category
 .\" .Pq Ar section
@@ -180,40 +217,3 @@ manual page entitled
 .\" is given, list the directories that would be searched.
 .\" .El
 .\" .Pp
-
-.Sh OPTIONS
-.Bl -tag -width Ds
-.It Fl h, -help
-Print usage information and exit.
-.It Fl v, -version
-Print version information and exit.
-.It Fl c, -csv 
-Read source text and map words data to a standard CSV format. If no 
-.Ar file 
-is specified takes the text from 
-.Ar stdin .
-.It Fl t, -text Ar number
-Generate text with
-.Ar number
-words. If no
-.Fl w
-is specified, it starts randomly from '.', '?' or '!'. If no
-.Fl f 
-is specified, it reads the standard CSV from
-.Ar stdin .
-.It Fl w, -word Ar word
-Specify starting 
-.Ar word
-for text generation.
-.It Fl p, -parallel
-Run command using parallel processeses.
-.It Fl f, -file Ar file
-Input
-.Ar file
-to convert to CSV or to start generation from.
-.It Fl o, -output Ar file
-Output  
-.Ar file
-where csv or generated text are written.
-.Sh AUTHORS
-Codex was written by Ionut Cicio.

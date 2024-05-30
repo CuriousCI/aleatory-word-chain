@@ -1,4 +1,4 @@
-#include "codex.h"
+#include "util.h"
 
 #include <errno.h>
 #include <getopt.h>
@@ -6,42 +6,63 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-void panic(char *error) {
-    if (errno == 0)
-        fprintf(stderr, "%s", error);
+void expect(char *message) {
+    if (errno)
+        perror(message);
     else
-        perror(error);
+        fprintf(stderr, "%s\n", message);
 
     exit(EXIT_FAILURE);
 }
 
-void expect(int value, char *error) {
-    if (value == -1)
-        panic(error);
+void panic() {
+    if (errno)
+        perror("");
+
+    exit(EXIT_FAILURE);
 }
 
-void help(flags_t *flags) {
-    if (flags == NULL)
-        fprintf(
-            stderr,
-            "Usage: codex ...\n"
-            "OPTIONS\n"
-            " -h, --help       \t\tPrint usage information and exit\n"
-            " -v, --version    \t\tPrint version information and exit\n"
-            " -c, --csv        \t\tconvert input to csv\n"
-            " -t, --text=NUMBER\t\tgenerate text of NUMBER words\n"
-            " -f, --file=FILE  \t\tinput file\n"
-            " -o, --output=FILE\t\toutput file\n"
-            " -w, --word=WORD  \t\tgenerate text starting from WORD word\n"
-            " -l, --locale     \t\tset locale of input file (Ex. it_IT.UTF-8)\n"
-            " -p, --parallel   \t\trun this command using multiple processes\n"
-        );
+void help() {
+    fprintf(
+        stderr,
+        "Usage: SRC | codex --csv > DST (job 1)\n"
+        "   or: codex --csv -f SRC -o DST (job 1)\n"
+        "   or: codex --text -n 1000 -f SRC -p > DST (job 2)\n"
+        "   or: codex --csv -f SRC -p --locale it_IT.UTF-8 > DST (job 2)\n"
+        "   or: codex --text -n 1000 -f SRC -p -w ciao > DST (job 2)\n"
+        "\n"
+    );
+
+    fprintf(
+        stderr,
+        "OPTIONS\n"
+        " -h, --help        print usage information and exit\n"
+        " -v, --version     print version information and exit\n"
+        "\n"
+        " CSV\n"
+        " -c, --csv         generate CSV from SRC into DST\n"
+        "\n"
+        " TEXT\n"
+        " -t, --text        generate TEXT from SRC into DST\n"
+        " -n, --number=NUM  generate TEXT with NUM words (NUM >= 0)\n"
+        " -w, --word=WORD   generate TEXT starting from WORD\n"
+        "\n"
+    );
+
+    fprintf(
+        stderr,
+        " GENERAL\n"
+        " -f, --file=FILE   input FILE\n"
+        " -o, --output=FILE output FILE\n"
+        " -p, --parallel    run using multiple processes\n"
+        " -l, --locale      set locale of input file (Ex. it_IT.UTF-8)\n"
+    );
 }
 
 void version() {
     fprintf(
         stderr,
-        "codex (Sapienza coreutils)\n 1.0"
+        "codex (SO2) 1.0\n"
         "Copyright (C) 2024 Free Software Foundation, Inc.\n"
         "License GPLv3+: GNU GPL version 3 ...\n\n"
         "Written by Cicio Ionut.\n"
@@ -64,6 +85,12 @@ void getflags(int argc, char *argv[], flags_t *flags) {
         {NULL, no_argument, NULL, '-'},
     };
 
+    flags->help = false;
+    flags->version = false;
+    flags->csv = false;
+    flags->parallel = false;
+    flags->text = false;
+    flags->number = 0;
     flags->locale = "";
     flags->word = NULL;
     flags->file = NULL;
@@ -71,6 +98,9 @@ void getflags(int argc, char *argv[], flags_t *flags) {
 
     while ((option = getopt_long(argc, argv, "hvctn:w:pf:o:l:", options, NULL)) != -1) {
         switch (option) {
+            case 'h':
+                flags->help = true;
+                break;
             case 'v':
                 flags->version = true;
                 break;
@@ -82,8 +112,6 @@ void getflags(int argc, char *argv[], flags_t *flags) {
                 break;
             case 'n':
                 flags->number = atoi(optarg);
-                if (flags->number < 0)
-                    flags->help = true;
                 break;
             case 'w':
                 flags->word = optarg;
@@ -104,4 +132,14 @@ void getflags(int argc, char *argv[], flags_t *flags) {
                 flags->help = true;
         }
     }
+
+    /* If no action is requested, print usage information and exit. */
+    if (!flags->csv && !flags->text && !flags->version)
+        flags->help = true;
+
+    if (flags->csv && flags->text)
+        expect("Can't run both --csv and --text");
+
+    if (flags->text && flags->number <= 0)
+        expect("--number=INTEGER>0 required with --text");
 }

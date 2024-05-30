@@ -1,74 +1,92 @@
 #define _GNU_SOURCE
+
+#include <errno.h>
 #include <fcntl.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "codex.h"
-#include "csv.h"
-#include "map.h"
-#include "text.h"
-#include "vec.h"
+#include "codex/csv.h"
+#include "codex/text.h"
+#include "codex/util.h"
+#include "collections/map.h"
+#include "collections/vec.h"
 
-/* EOC = End Of Communication */
+/* Delimiter to separate WORDS for inter-process communication */
+#define DELIMITER '\1'
 
-/* Redefined to match 'int (*collect)(void *, char *)' API. */
+/* Redefined to match 'int (*collect)(void *, char *)'. */
 int _push(void *vec, char *item) {
     return push(vec, item);
 }
 
-/* Redefined to match 'int (*collect)(void *, char *)' API. */
+/* Redefined to match 'int (*collect)(void *, char *)'. */
+int _fprintdelim(void *stream, char *buf) {
+    return fprintf(stream, "%s%c", buf, DELIMITER) < 0 ? -1 : 0;
+}
+
+/* Redefined to match 'int (*collect)(void *, char *)'. */
 int _fprintf(void *stream, char *buf) {
-    return fprintf(stream, "%s\n", buf) < 0 ? -1 : 0;
+    return fprintf(stream, "%s", buf) < 0 ? -1 : 0;
 }
 
-/* Redefined to match 'char *(*consume)(void *)' API. */
-char *_getstr(void *stream) {
-    char *lineptr = NULL;
-    size_t n = 0, read;
-
-    read = getline(&lineptr, &n, stream);
-    /* EMPTY byte means EOC. */
-    if (*lineptr == '\n')
-        return NULL;
-
-    lineptr[read - 1] = 0;
-    return lineptr;
-}
-
-/* Redefined to match 'char *(*consume)(void *)' API. */
+/* Redefined to match 'char *(*consume)(void *)'. */
 char *_next(void *iter) {
     return next(iter);
 }
 
-/* Quality of life improvement. */
+/* Redefined to match 'char *(*consume)(void *)'. */
+char *_getdelim(void *stream) {
+    char *lineptr = NULL;
+    size_t n = 0, read;
+
+    read = getdelim(&lineptr, &n, DELIMITER, stream);
+    /* End of communication. */
+    if (*lineptr == DELIMITER)
+        return NULL;
+
+    /* NULL terminate LINEPTR. */
+    lineptr[read - 1] = 0;
+    return lineptr;
+}
+
+/* Quality of life improvement. I thought the name would be funny :) */
 void pipe3(FILE **out, FILE **in) {
     int pipedes[2];
 
     if (pipe(pipedes) == -1)
-        panic("couldn't open pipe");
+        expect("couldn't open pipe");
 
     if ((*in = fdopen(pipedes[0], "r")) == NULL)
-        panic("couldn't open file on read pipe");
+        expect("couldn't open file on read pipe");
 
     if ((*out = fdopen(pipedes[1], "w")) == NULL)
-        panic("couldn't open file on write pipe");
+        expect("couldn't open file on write pipe");
 }
 
 int main(int argc, char **argv) {
     flags_t flags;
-    FILE *stream = stdin, *out = stdout;
+    /* By defaults reads from stdin and writes to stdout to mike the command usable with redirection. */
+    FILE *in = stdin, *out = stdout;
+    char *locale = NULL;
+
+    /* getpriority(2) sets errno to 0 and then modifies it to signal errors. I decided to do the same for this program. */
+    errno = 0;
 
     getflags(argc, argv, &flags);
 
-    setlocale(LC_ALL, flags.locale);
-    /* Required as some locales use commas for decimal numbers. */
-    setlocale(LC_NUMERIC, "en_US.UTF-8");
+    locale = setlocale(LC_ALL, flags.locale);
+    if (locale == NULL || (!strcmp(flags.locale, "") && !strcmp(flags.locale, locale)))
+        expect("locale not supported!");
+
+    /* Some locales use commas for decimal numbers. C.utf8 is guaranteed to exist and uses dots. */
+    setlocale(LC_NUMERIC, "C.utf8");
 
     if (flags.help) {
-        help(&flags);
+        help();
         exit(EXIT_SUCCESS);
     }
 
@@ -77,104 +95,146 @@ int main(int argc, char **argv) {
         exit(EXIT_SUCCESS);
     }
 
-    if (flags.file && (stream = fopen(flags.file, "r")) == NULL)
-        panic("input file");
+    if (flags.file && (in = fopen(flags.file, "r")) == NULL)
+        expect("unable to open input file");
 
     if (flags.output && (out = fopen(flags.output, "w")) == NULL)
-        panic("output file");
+        expect("unable to open output file");
 
-    /* Single process. Uses the same API as the multi-process solution. */
-    if (!flags.parallel && flags.csv) {
-        struct vec_t *words = vec();
-        struct map_t *counters = map();
+    /* SINGLE-PROCESS */
+    if (!flags.parallel) {
+        struct vec_t *_vec;
+        struct map_t *_map;
 
-        split(stream, _push, words);
-        count(counters, _next, iter(words));
-        csv(counters, out);
+        if ((_vec = vec()) == NULL)
+            expect("Unable to initialize vec for words/lines");
+
+        if ((_map = map()) == NULL)
+            expect("Unable to initialize map for csv");
+
+        if (flags.csv) {
+            /* TEXT to CSV conversion. */
+
+            if (split_words(in, _push, _vec) == -1)
+                expect("unable to split input stream in words");
+
+            if (fclose(in) == -1) panic();
+
+            if (count_words(_map, _next, iter(_vec)) == -1)
+                expect("unable to count words");
+
+            if (csv(_map, _fprintf, out) == -1)
+                expect("unable to generate csv");
+
+        } else if (flags.text) {
+            /* CSV to TEXT conversion. */
+
+            if (split_lines(in, _push, _vec) == -1)
+                expect("unable to split input stream in lines!");
+
+            if (fclose(in) == -1) panic();
+
+            if (insert_lines(_map, _next, iter(_vec)) == -1)
+                expect("unable to parse csv lines!");
+
+            if (text(_map, _fprintf, out, flags.number, flags.word))
+                expect("unable to generate text! Start WORD not found in CSV or punctuation is missing.");
+
+            if (fprintf(out, "\n") == -1) panic();
+        }
+
+        if (fflush(out)) panic();
+        if (fclose(out) == -1) panic();
 
         exit(EXIT_SUCCESS);
     }
 
-    /* Single process. Uses the same API as the multi-process solution. */
-    if (!flags.parallel && flags.text) {
-        struct vec_t *rows = vec();
-        struct map_t *csv = map();
-
-        lines(stream, _push, rows);
-        insert(csv, _next, iter(rows));
-        text(csv, out, flags.number, flags.word);
-
-        exit(EXIT_SUCCESS);
-    }
-
+    /* PARALLEL-PROCESSES */
     if (flags.parallel) {
         pid_t pid = 0;
-        FILE *parser_out, *counter_in, *counter_out, *printer_in;
+        FILE *first_out, *second_in, *second_out, *third_in;
 
-        pipe3(&parser_out, &counter_in);
-        if ((pid = fork()) == -1)
-            panic("fork _parser");
+        pipe3(&first_out, &second_in);
+        if ((pid = fork()) == -1) expect("fork parser/lines");
 
         /* PROCESS 1. */
         if (pid == 0) {
-            if (flags.csv)
-                /* Reads input and splits the words and sends them to counter. */
-                split(stream, _fprintf, parser_out);
-            if (flags.text)
-                /* Reads input and splits the lines and sends them to generator. */
-                lines(stream, _fprintf, parser_out);
+            if (fclose(second_in)) panic();
 
-            /* EOC */
-            fprintf(parser_out, "\n");
-            fflush(parser_out);
+            if (flags.csv) {
+                /* Reads input and splits the words and sends them to counter. */
+                if (split_words(in, _fprintdelim, first_out) == -1)
+                    expect("unable to split input stream in words");
+            } else if (flags.text) {
+                /* Reads input and splits the lines and sends them to generator. */
+                if (split_lines(in, _fprintdelim, first_out) == -1)
+                    expect("unable to split lines");
+            }
+
+            /* End of communication */
+            if (fflush(first_out)) panic();
+            if (fprintf(first_out, "%c", DELIMITER) < 0) panic();
+            if (fflush(first_out)) panic();
+            if (fclose(first_out)) panic();
 
             exit(EXIT_SUCCESS);
         }
 
-        pipe3(&counter_out, &printer_in);
-        if ((pid = fork()) == -1)
-            panic("fork _counter");
+        if (fclose(first_out)) panic();
+        pipe3(&second_out, &third_in);
+
+        if ((pid = fork()) == -1) expect("fork counter/generator");
 
         /* PROCESS 2. */
         if (pid == 0) {
+            struct map_t *_map;
+
+            fclose(third_in);
+
+            if ((_map = map()) == NULL)
+                expect("unable to initialize map csv");
+
             if (flags.csv) {
-                /* Counts the words and converts the counters to CSV lines, which are sent the printer. */
-                struct map_t *counters = map();
-                count(counters, _getstr, counter_in);
-                csv(counters, counter_out);
+                /* Counts the words and converts the counters to CSV lines, which are sent the PROCESS 3. */
+
+                if (count_words(_map, _getdelim, second_in) == -1)
+                    expect("unable to count words");
+
+                if (csv(_map, _fprintdelim, second_out) == -1)
+                    expect("unable to generate csv");
+
+            } else if (flags.text) {
+                /* Builds the csv and generates the text which is sent to the PROCESS 3. */
+                if (insert_lines(_map, _getdelim, second_in) == -1)
+                    expect("unable to parse csv lines!");
+
+                if (text(_map, _fprintdelim, second_out, flags.number, flags.word) == -1)
+                    expect("Unable to generate text! Starting WORD not found in CSV or PUNCTUATION is missing in CSV.");
             }
 
-            if (flags.text) {
-                /* Builds the csv and generates the text which is sent to the printer. */
-                struct map_t *csv = map();
-                insert(csv, _getstr, counter_in);
-                text(csv, counter_out, flags.number, flags.word);
-            }
+            /* End of communication */
+            if (fprintf(second_out, "%c", DELIMITER) < 0) panic();
+            if (fflush(second_out)) panic();
 
-            fprintf(counter_out, "\n");
-            fflush(counter_out);
-
-            /* EOC */
+            if (fclose(second_in)) panic();
+            if (fclose(second_out)) panic();
 
             exit(EXIT_SUCCESS);
         }
 
         /* PROCESS 3. Prints results from PROCESS 2. */
         {
-            char *lineptr = NULL;
-            size_t n = 0;
+            char *word;
+            while ((word = _getdelim(third_in)))
+                if (fprintf(out, "%s", word) < 0) panic();
 
-            while (1) {
-                if (flags.csv)
-                    getline(&lineptr, &n, printer_in);
-                else if (flags.text)
-                    getdelim(&lineptr, &n, ' ', printer_in);
+            if (flags.text)
+                if (fprintf(out, "\n") == -1) panic();
 
-                if (*lineptr == '\n') break;
+            if (fflush(out)) panic();
+            if (fclose(out)) panic();
+            if (fclose(third_in)) panic();
 
-                fprintf(out, "%s", lineptr);
-                lineptr = NULL;
-            }
             exit(EXIT_SUCCESS);
         }
     }

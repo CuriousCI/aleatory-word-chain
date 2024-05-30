@@ -1,95 +1,68 @@
-# CFLAGS = -Wall -Wextra -ansi -Wpedantic
-CFLAGS = -ansi -Wall -Wextra -Wpedantic -Wunused-result -Wunused-value
-SHELL = /bin/zsh
-SRC = ./src/*.c
-OBJ = $(SRC:.c=.o)
-EXEC = codex
+# compilation
+CC := gcc
+CFLAGS := -ansi -Wall -Wextra -Wpedantic -Wunused-result -Wunused-value
+SRC := src
+
+# codex version
+VERSION := 1.0 
+
+# paths
+PREFIX := /usr/local
+MANPREFIX := $(PREFIX)/share/man
+
+all: codex
+
+codex : $(SRC)/main.o $(SRC)/codex/util.o $(SRC)/codex/csv.o $(SRC)/codex/text.o $(SRC)/collections/map.o $(SRC)/collections/vec.o
+	$(CC) $^ -o $@
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: all clean
 
-all: $(EXEC)
-
-$(EXEC): $(OBJ)
-
-# %.o: %.c
-#  $(CC) $(CFLAGS) -c $< -o $@
-.c.o:
-	$(CC) -c $(CFLAGS) $<
-
 clean:
-	rm -f $(OBJ) $(EXEC)
+	rm -f $(SRC)/*.o $(SRC)/collections/*.o $(SRC)/codex/*.o codex
 
-install: all
+# DESTDIR can be specified if you don't want to use the default install location
+
+install: all 
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp -f dmenu dmenu_path dmenu_run stest $(DESTDIR)$(PREFIX)/bin
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/dmenu
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/dmenu_path
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/dmenu_run
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/stest
+	cp -f codex $(DESTDIR)$(PREFIX)/bin
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/codex
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
-	sed "s/VERSION/$(VERSION)/g" < dmenu.1 > $(DESTDIR)$(MANPREFIX)/man1/dmenu.1
-	sed "s/VERSION/$(VERSION)/g" < stest.1 > $(DESTDIR)$(MANPREFIX)/man1/stest.1
-	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/dmenu.1
-	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/stest.1
+	sed "s/VERSION/$(VERSION)/g" < codex.1 > $(DESTDIR)$(MANPREFIX)/man1/codex.1
+	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/codex.1
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/dmenu\
-		$(DESTDIR)$(PREFIX)/bin/dmenu_path\
-		$(DESTDIR)$(PREFIX)/bin/dmenu_run\
-		$(DESTDIR)$(PREFIX)/bin/stest\
-		$(DESTDIR)$(MANPREFIX)/man1/dmenu.1\
-		$(DESTDIR)$(MANPREFIX)/man1/stest.1
+	rm -f $(DESTDIR)$(PREFIX)/bin/codex\
+		$(DESTDIR)$(MANPREFIX)/man1/codex.1
 
 
-# CC = gcc
-# CFLAGS = -Wall -Wextra -g
-# LDFLAGS =
-#
-# SRCS = main.c utils.c
-# OBJS = $(SRCS:.c=.o)
-# EXEC = myprogram
-#
-# .PHONY: all clean
-#
-# all: $(EXEC)
-#
-# $(EXEC): $(OBJS)
-#  $(CC) $(LDFLAGS) $^ -o $@
-#
-# %.o: %.c
-#  $(CC) $(CFLAGS) -c $< -o $@
-#
-# clean:
-#  rm -f $(OBJS) $(EXEC)
+# Some tests
 
+help: all
+	./codex --help
 
+lotr: all
+	cat ./tests/lotr | ./codex --csv > output
 
-build:
-	gcc ./src/*.c -o codex $(CFLAGS)
+divina: all
+	cat ./tests/divina | ./codex --csv -o output -p
 
-help:
-	gcc ./src/*.c -o codex $(CFLAGS) && ./codex --help
+one: all
+	cat ./tests/test_1 | ./codex --csv -p > output
 
-lotr:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat ./tests/lotr | ./codex --csv > output
+generate: divina
+	cat output | ./codex --text -n 0 > text
 
-divina:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat ./tests/test_5 | ./codex --csv -p -o output
+generateX: lotr
+	cat output | ./codex --text -n 10000 > text
 
-one:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat ./tests/test_1 | ./codex --csv -p > output
+generateY: lotr
+	cat output | ./codex --text -n 100000 -p > text
 
-generate:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat output | ./codex --text -n 0 > text
+generateZ: one
+	cat output | ./codex --text -n 1000000 > text
 
-generateX:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat output | ./codex --text -n 10000 > text
-
-generateY:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat output | ./codex --text -n 100000 -p > text
-
-generateZ:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat output | ./codex --text -n 1000000 > text
-
-generateE:
-	gcc ./src/*.c -o codex $(CFLAGS) && time cat output | ./codex --text -n 100000000 > text
+generateE: one
+	cat output | ./codex --text -n 100000000 > text
