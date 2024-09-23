@@ -1,6 +1,8 @@
 #ifndef CSV_H_
 #define CSV_H_
 
+/* Functions to generate CSV from TEXT. */
+
 #include <stdio.h>
 
 #include "../collections/map.h"

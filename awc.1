@@ -1,0 +1,115 @@
+.Dd $Mdocdate: May 19 2024 $
+.Dt MAN 1
+.Os
+.Sh NAME 
+.Nm awc
+.Nd generate realistic random text
+.Sh SYNOPSIS 
+.Nm awc
+.Op Fl hv
+.Nm awc
+.Fl c
+.Op Fl f Ar file
+.Op Fl o Ar output
+.Op Fl l Ar locale
+.Op Fl p
+.Nm awc
+.Fl t
+.Fl n Ar number
+.Op Fl w Ar word
+.Op Fl f Ar file
+.Op Fl o Ar output
+.Op Fl l Ar locale
+.Op Fl p
+.Sh DESCRIPTION
+The
+.Nm
+command generates realistic random text based on a source text.
+It works in two parts: it first analyzes a 
+.Ar text 
+and generates a
+.Ar csv
+with the frequencies of words by using  
+.Fl -csv
+then takes the
+.Ar csv
+and generates a random 
+.Ar text
+from it, by specifying the 
+.Ar number
+of words and optionally the
+.Ar word
+to start the generation from.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl h, -help
+Print usage information and exit.
+.It Fl v, -version
+Print version information and exit.
+.It Fl c, -csv 
+Parse SRC TEXT and generate CSV. 
+.It Fl t, -text
+Parse SRC CSV and generate TEXT.
+.It Fl n, -number Ar number
+Mandatory when using 
+.Fl -text
+option. Sets the 
+.Ar number
+of words to generate.
+.It Fl w, -word Ar word
+Specify starting 
+.Ar word
+for text generation. It's case insensitive. If no word is specified, a random punctuation ('?', '!', '.') is chosen if present, otherwise the generation doesn't start. 
+.It Fl f, -file Ar file
+Set input 
+.Ar file
+If this option isn't set, the default is 
+.Ar stdin
+.It Fl o, -output Ar file
+Set output 
+.Ar file
+If this option isn't set, the default is 
+.Ar stdout
+.It Fl l, -locale Ar locale
+Sets 
+.Ar locale
+for encoding and decoding TEXT and CSVs. If this options isn't set, the default system locale is used.
+.It Fl p, -parallel
+Run command using parallel processeses.
+.Sh EXAMPLES
+
+.Nm awc 
+--csv -f 
+.Ar SRC -o 
+.Ar DST 
+(task 1)
+
+.Nm awc 
+--text -n 1000 -f 
+.Ar SRC -p > 
+.Ar DST 
+(task 2)
+
+.Nm awc 
+--csv -f 
+.Ar SRC 
+-p --locale it_IT.UTF-8 > 
+.Ar DST 
+(task 2)
+
+.Nm awc 
+--text -n 1000 -f
+.Ar SRC
+-p -w ciao > 
+.Ar DST 
+(task 2)
+
+cat tests/lotr | grep -i frodo | 
+.Nm awc -c 
+| 
+.Nm awc 
+-t -n 100 -w frodo 
+
+.Sh AUTHORS
+.Nm awc
+was written by Ionut Cicio

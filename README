@@ -1,50 +1,75 @@
-CODEX
+AWC
 
-DISCLAIMER* - i commenti e il codice li ho preferiti scrivere in inglese per coerenza
-
-NOTA* - se preferisce, è possibile eseguire `sudo make install` per installare il progetto (`codex`) e invocare `man codex` per vedere la pagina man; alternativamente può anche eseguire `man ./codex.1`
-
-NOTA* - è disponibile anche `sudo make uninstall`
+NOTA* - se preferisce, è possibile eseguire `sudo make install` per installare il comando `awc` (il progetto) e invocare `man awc` per vedere la pagina man; alternativamente può anche eseguire `man ./awc.1`
 
 DESCRIZIONE
 
     Il programma ha due opzioni principali '--csv' (esegue il compito 1) e '--text' (esegue il compito 2). 
+    Di default l'input viene preso da `stdin`, e l'output viene scritto su `stdout` in modo da facilitare l'interazione con altri comandi tramite redirection.
+    È comunque possibile specificare con -f, --file il file di input e con -o, --output il file di output.
 
-    Di default ho deciso che il testo di input viene preso da `stdin`, e quello di output scritto su `stdout` in modo da facilitare l'interazione con altri comandi tramite redirection (un po' come fa `grep`).
+OPZIONI COMPITO 1
 
-    È comunque possibile specificare con -f o --file il file di input e con -o o --output il file di output.
+    -c, --csv   Genera un CSV a partire dal testo in input
 
-COMPITO 1
+OPZIONI COMPITO 2
 
-    --csv ha l'opzione -p o --parallel per eseguire il comando con i 3 processi paralleli
-
-COMPITO 2
-
-    --text ha varie opzioni:
-        -n, --number per specificare il numero di parole da generare (di default 0)
-        -w, --word per specificare la parola iniziale
-        -p, --parallel per eseguire il comando con i 3 processi paralleli
+    -t, --text  Genera un TESTO a partire da un CSV in input
+        -n, --number=NUMERO     Obbligatorio, specifica il numero di parole da generare
+        -w, --word=PAROLA       Specifica la parola iniziale (case insensitive)
 
 OPZIONI COMUNI
 
-    Oltre a -p, -f e -o c'è l'opzione -l o --locale per specificare un locale per il testo in input 
-        - il programma considera il locale di default del sistema
-        - se questo non è l'italiano è possibile specificarlo proprio grazie a --locale
-        - è possibile vedere un elenco di locale installati sulla macchina con `locale -a`
+    -p, --parallel          Eseguire il comando con 3 processi paralleli
+    -f, --file=FILE         Specifica il file in input
+    -o, --output=FILE       Specifica il file in output
+    -l, --locale=LOCALE     Specifica il locale da usare per decodificare e codificare i testi
+
+    Per un elenco dei 'locale' installati sulla macchina, c'è il comando `locale -a`
 
 ESEMPI D'USO
 
-    --text ha l'opzione -p per eseguire il comando con i 3 processi paralleli
+    awc --csv -f SRC -o DST (compito 1)
 
-    codex --csv -f SRC -o DST (task 1)
+    awc --text -n 1000 -f SRC -p > DST (compito 2)
 
-    codex --text -n 1000 -f SRC -p > DST (task 2)
+    awc --csv -f SRC -p --locale it_IT.UTF-8 > DST (compito 2)
 
-    codex --csv -f SRC -p --locale it_IT.UTF-8 > DST (task 2)
+    awc --text -n 1000 -f SRC -p -w ciao > DST (compito 2)
 
-    codex --text -n 1000 -f SRC -p -w ciao > DST (task 2)
+    cat tests/lotr | grep -i frodo | awc --csv | awc --text -n 100 -w frodo 
 
-    cat tests/lotr | grep -i frodo | codex --csv |  codex --text -n 100 -w frodo 
+    echo "Ciao come stai? Ciao, tutto bene!" | awc -c | awc -t -n 100 -w CIAO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 COLLECTION, COLLECT, CONSUME API
 

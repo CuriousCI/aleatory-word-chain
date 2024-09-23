@@ -25,11 +25,11 @@ void panic() {
 void help() {
     fprintf(
         stderr,
-        "Usage: SRC | codex --csv > DST (job 1)\n"
-        "   or: codex --csv -f SRC -o DST (job 1)\n"
-        "   or: codex --text -n 1000 -f SRC -p > DST (job 2)\n"
-        "   or: codex --csv -f SRC -p --locale it_IT.UTF-8 > DST (job 2)\n"
-        "   or: codex --text -n 1000 -f SRC -p -w ciao > DST (job 2)\n"
+        "Usage: SRC | awc --csv > DST (task 1)\n"
+        "   or: awc --csv -f SRC -o DST (task 1)\n"
+        "   or: awc --text -n 1000 -f SRC -p > DST (task 2)\n"
+        "   or: awc --csv -f SRC -p --locale it_IT.UTF-8 > DST (task 2)\n"
+        "   or: awc --text -n 1000 -f SRC -p -w ciao > DST (task 2)\n"
         "\n"
     );
 
@@ -44,7 +44,7 @@ void help() {
         "\n"
         " TEXT\n"
         " -t, --text        generate TEXT from SRC into DST\n"
-        " -n, --number=NUM  generate TEXT with NUM words (NUM >= 0)\n"
+        " -n, --number=NUM  generate TEXT with NUM words (NUM > 0)\n"
         " -w, --word=WORD   generate TEXT starting from WORD\n"
         "\n"
     );
@@ -62,7 +62,7 @@ void help() {
 void version() {
     fprintf(
         stderr,
-        "codex (SO2) 1.0\n"
+        "awc (SO2) 1.0\n"
         "Copyright (C) 2024 Free Software Foundation, Inc.\n"
         "License GPLv3+: GNU GPL version 3 ...\n\n"
         "Written by Cicio Ionut.\n"
@@ -133,7 +133,6 @@ void getflags(int argc, char *argv[], flags_t *flags) {
         }
     }
 
-    /* If no action is requested, print usage information and exit. */
     if (!flags->csv && !flags->text && !flags->version)
         flags->help = true;
 
@@ -141,5 +140,5 @@ void getflags(int argc, char *argv[], flags_t *flags) {
         expect("Can't run both --csv and --text");
 
     if (flags->text && flags->number <= 0)
-        expect("--number=INTEGER>0 required with --text");
+        expect("--number=NUMBER with NUMBER > 0 required when using --text");
 }

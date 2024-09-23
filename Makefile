@@ -1,18 +1,17 @@
-# compilation
 CC := gcc
-CFLAGS := -ansi -Wall -Wextra -Wpedantic -Wunused-result -Wunused-value
+# CFLAGS := -ansi -Wall -Wextra -Wpedantic -Wunused-result -Wunused-value
 SRC := src
 
-# codex version
 VERSION := 1.0 
 
-# paths
+# Paths
+
 PREFIX := /usr/local
 MANPREFIX := $(PREFIX)/share/man
 
-all: codex
+all: awc
 
-codex : $(SRC)/main.o $(SRC)/codex/util.o $(SRC)/codex/csv.o $(SRC)/codex/text.o $(SRC)/collections/map.o $(SRC)/collections/vec.o
+awc : $(SRC)/main.o $(SRC)/awc/util.o $(SRC)/awc/csv.o $(SRC)/awc/text.o $(SRC)/collections/map.o $(SRC)/collections/vec.o
 	$(CC) $^ -o $@
 
 %.o : %.c
@@ -21,48 +20,18 @@ codex : $(SRC)/main.o $(SRC)/codex/util.o $(SRC)/codex/csv.o $(SRC)/codex/text.o
 .PHONY: all clean
 
 clean:
-	rm -f $(SRC)/*.o $(SRC)/collections/*.o $(SRC)/codex/*.o codex
+	rm -f $(SRC)/*.o $(SRC)/collections/*.o $(SRC)/awc/*.o awc
 
 # DESTDIR can be specified if you don't want to use the default install location
 
 install: all 
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp -f codex $(DESTDIR)$(PREFIX)/bin
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/codex
+	cp -f awc $(DESTDIR)$(PREFIX)/bin
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/awc
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
-	sed "s/VERSION/$(VERSION)/g" < codex.1 > $(DESTDIR)$(MANPREFIX)/man1/codex.1
-	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/codex.1
+	sed "s/VERSION/$(VERSION)/g" < awc.1 > $(DESTDIR)$(MANPREFIX)/man1/awc.1
+	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/awc.1
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/codex\
-		$(DESTDIR)$(MANPREFIX)/man1/codex.1
-
-
-# Some tests
-
-help: all
-	./codex --help
-
-lotr: all
-	cat ./tests/lotr | ./codex --csv > output
-
-divina: all
-	cat ./tests/divina | ./codex --csv -o output -p
-
-one: all
-	cat ./tests/test_1 | ./codex --csv -p > output
-
-generate: divina
-	cat output | ./codex --text -n 0 > text
-
-generateX: lotr
-	cat output | ./codex --text -n 10000 > text
-
-generateY: lotr
-	cat output | ./codex --text -n 100000 -p > text
-
-generateZ: one
-	cat output | ./codex --text -n 1000000 > text
-
-generateE: one
-	cat output | ./codex --text -n 100000000 > text
+	rm -f $(DESTDIR)$(PREFIX)/bin/awc\
+		$(DESTDIR)$(MANPREFIX)/man1/awc.1

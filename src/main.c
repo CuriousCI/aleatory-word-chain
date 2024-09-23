@@ -9,9 +9,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "codex/csv.h"
-#include "codex/text.h"
-#include "codex/util.h"
+#include "awc/csv.h"
+#include "awc/text.h"
+#include "awc/util.h"
 #include "collections/map.h"
 #include "collections/vec.h"
 

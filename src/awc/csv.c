@@ -8,6 +8,7 @@
 #include <wctype.h>
 
 #include "../collections/vec.h"
+#include "util.h"
 
 /* Collects wchars into WORDS. Returns -1 on ERROR. */
 static int parse(wchar_t wc, char *words[2]);
@@ -57,7 +58,7 @@ static int parse(wchar_t wc, char *words[2]) {
 
         /* Convert WC UNICODE codepoint to UTF-8 encoded bytes. */
         if ((lengthening = wctomb(buffer, wc)) == -1)
-            return -1;
+            expect("unable to encode UNICODE character to UTF-8");
         buffer[lengthening] = 0;
 
         if (word == NULL) {

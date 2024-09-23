@@ -1,8 +1,5 @@
 #include "text.h"
 
-#include "../collections/map.h"
-#include "../collections/vec.h"
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +7,10 @@
 #include <time.h>
 #include <wchar.h>
 #include <wctype.h>
+
+#include "../collections/map.h"
+#include "../collections/vec.h"
+#include "util.h"
 
 /* Splits STREAM into LINES which collects in a COLLECTION */
 int split_lines(FILE *stream, int (*collect)(void *, char *), void *collection) {
@@ -45,10 +46,11 @@ int insert_lines(struct map_t *csv, char *(*consume)(void *), void *collection) 
         struct row_t *word_row;
         char *word, *next, *frequency;
         void **val;
+        float total = 0;
 
         /* First WORD in line is the WORD */
         if ((word = strtok(line, ",\n\0")) == NULL)
-            return -1;
+            expect("unable to parse CSV, check for empty lines");
 
         /* Create an associated ENTRY in the CSV MAP.  */
         if ((word_entry = find(csv, word)) == NULL)
@@ -68,11 +70,20 @@ int insert_lines(struct map_t *csv, char *(*consume)(void *), void *collection) 
         /* Parse line */
         while ((next = strtok(NULL, ",\n\0")) && (frequency = strtok(NULL, ",\n"))) {
             struct entry_t *next_entry;
+            float f;
 
             if ((next_entry = find(word_row->words, next)) == NULL)
                 return -1;
 
-            *(float *)value(next_entry) = atof(frequency);
+            f = atof(frequency);
+            *(float *)value(next_entry) = f;
+            total += f;
+        }
+
+        /* I prefer a bigger tollerance. */
+        if (total < 1 - 0.05) {
+            fprintf(stderr, "On word \"%s\"\n", key(word_entry));
+            expect("CSV line has total frequency < 1 - 0.05");
         }
     }
 
@@ -81,7 +92,7 @@ int insert_lines(struct map_t *csv, char *(*consume)(void *), void *collection) 
 
 int text(struct map_t *csv, int (*collect)(void *, char *), void *collection, size_t n, char *start) {
     struct entry_t *word_entry;
-    bool capitalize = false;
+    bool capitalize = true;
     char *word;
     size_t i;
 
@@ -125,7 +136,7 @@ int text(struct map_t *csv, int (*collect)(void *, char *), void *collection, si
 
         /* If it's value is NULL, START wasn't in CSV. */
         if (*value(word_entry) == NULL)
-            return -1;
+            expect("starting word not found in CSV");
     } else {
         char *punctuation[3] = {"?", "!", "."};
         short n = 3;
@@ -147,10 +158,7 @@ int text(struct map_t *csv, int (*collect)(void *, char *), void *collection, si
         }
 
         if (n == 0)
-            /* No PUNCTUATION found.  */
-            return -1;
-
-        capitalize = true;
+            expect("no punctuation found in CSV");
     }
 
     for (i = 0; i < n; i++) {
